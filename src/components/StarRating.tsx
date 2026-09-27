@@ -9,7 +9,12 @@ interface Props {
   onRatingChange: () => void
 }
 
-export default function StarRating({ resourceId, averageRating, totalRatings, onRatingChange }: Props) {
+export default function StarRating({
+  resourceId,
+  averageRating,
+  totalRatings,
+  onRatingChange,
+}: Props) {
   const { user } = useAuth()
   const [hover, setHover] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -17,8 +22,7 @@ export default function StarRating({ resourceId, averageRating, totalRatings, on
   const handleRate = async (value: number) => {
     if (!user) return alert('You must be logged in to rate.')
     setLoading(true)
-    
-    // Upsert: Insert if new, Update if user already rated this resource
+
     const { error } = await supabase
       .from('ratings')
       .upsert(
@@ -27,7 +31,7 @@ export default function StarRating({ resourceId, averageRating, totalRatings, on
       )
 
     if (error) alert(error.message)
-    else onRatingChange() // Refresh the parent component to show new average
+    else onRatingChange()
     setLoading(false)
   }
 
@@ -39,7 +43,11 @@ export default function StarRating({ resourceId, averageRating, totalRatings, on
             key={star}
             type="button"
             disabled={loading}
-            className={`text-xl ${(hover || Math.round(averageRating)) >= star ? 'text-yellow-500' : 'text-gray-300'}`}
+            className={`text-xl transition-colors ${
+              (hover || Math.round(averageRating)) >= star
+                ? 'text-yellow-500'
+                : 'text-muted-foreground/40'
+            }`}
             onMouseEnter={() => setHover(star)}
             onMouseLeave={() => setHover(0)}
             onClick={() => handleRate(star)}
@@ -48,7 +56,7 @@ export default function StarRating({ resourceId, averageRating, totalRatings, on
           </button>
         ))}
       </div>
-      <span className="text-sm text-gray-500">
+      <span className="text-sm text-muted-foreground">
         {averageRating ? averageRating.toFixed(1) : '0.0'} ({totalRatings || 0})
       </span>
     </div>

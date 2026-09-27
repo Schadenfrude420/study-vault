@@ -1,1 +1,311 @@
 @import "tailwindcss";
+
+/* Enable `dark:` variants keyed off a `.dark` class on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------
+   LIGHT THEME (fallback only — the app runs .dark)
+   ------------------------------------------------------------ */
+:root {
+  --radius: 0.625rem;
+
+  --background: oklch(0.99 0.003 255);
+  --foreground: oklch(0.18 0.03 260);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.03 260);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.03 260);
+
+  --primary: oklch(0.55 0.22 260);
+  --primary-foreground: oklch(0.99 0.005 255);
+
+  --secondary: oklch(0.96 0.01 255);
+  --secondary-foreground: oklch(0.22 0.03 260);
+
+  --muted: oklch(0.96 0.01 255);
+  --muted-foreground: oklch(0.50 0.03 258);
+
+  --accent: oklch(0.94 0.02 255);
+  --accent-foreground: oklch(0.22 0.03 260);
+
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: oklch(0.99 0.005 255);
+
+  --border: oklch(0.92 0.01 255);
+  --input: oklch(0.92 0.01 255);
+  --ring: oklch(0.55 0.22 260);
+}
+
+/* ------------------------------------------------------------
+   DARK THEME — CloudPeak navy
+   Deep navy base · electric blue primary · cool slate text
+   ------------------------------------------------------------ */
+.dark {
+  /* Page — deep navy */
+  --background: oklch(0.135 0.022 260);
+  --foreground: oklch(0.985 0.003 255);
+
+  /* Cards — one step up */
+  --card: oklch(0.185 0.025 260);
+  --card-foreground: oklch(0.985 0.003 255);
+
+  /* Popovers / dialogs */
+  --popover: oklch(0.215 0.028 260);
+  --popover-foreground: oklch(0.985 0.003 255);
+
+  /* Vivid CloudPeak blue */
+  --primary: oklch(0.58 0.215 260);
+  --primary-foreground: oklch(0.99 0.003 255);
+
+  --secondary: oklch(0.235 0.025 260);
+  --secondary-foreground: oklch(0.985 0.003 255);
+
+  --muted: oklch(0.215 0.025 260);
+  --muted-foreground: oklch(0.66 0.028 255);
+
+  --accent: oklch(0.26 0.035 260);
+  --accent-foreground: oklch(0.985 0.003 255);
+
+  --destructive: oklch(0.62 0.22 25);
+  --destructive-foreground: oklch(0.99 0.003 255);
+
+  --border: oklch(0.27 0.025 260);
+  --input: oklch(0.26 0.025 260);
+  --ring: oklch(0.58 0.215 260);
+}
+
+/* ------------------------------------------------------------
+   EXPOSE TOKENS AS TAILWIND UTILITIES
+   (bg-background, text-foreground, bg-card, border-border, …)
+   ------------------------------------------------------------ */
+@theme inline {
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/* ------------------------------------------------------------
+   BASE
+   ------------------------------------------------------------ */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    height: 100%;
+    background-color: var(--background);
+  }
+
+  body {
+    min-height: 100%;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Very subtle ambient blue tint at the top of every page */
+  .dark body {
+    background-image: radial-gradient(
+      ellipse 100% 50% at 50% -10%,
+      color-mix(in oklch, var(--primary) 14%, transparent),
+      transparent 60%
+    );
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  #root {
+    min-height: 100%;
+  }
+
+  :focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+}
+
+/* ------------------------------------------------------------
+   UTILITIES
+   ------------------------------------------------------------ */
+
+/* Primary button halo */
+@utility glow-primary {
+  box-shadow:
+    0 4px 16px -4px color-mix(in oklch, var(--primary) 50%, transparent),
+    0 0 24px -8px color-mix(in oklch, var(--primary) 35%, transparent);
+}
+
+/* Cards with a subtle blue-edged glow — the CloudPeak panel look */
+@utility card-glow {
+  border: 1px solid color-mix(in oklch, var(--primary) 22%, var(--border));
+  box-shadow:
+    0 1px 0 0 color-mix(in oklch, var(--primary) 12%, transparent) inset,
+    0 8px 24px -12px color-mix(in oklch, var(--primary) 35%, transparent);
+}
+
+/* Interactive version — brightens on hover */
+@utility card-glow-hover {
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.card-glow-hover:hover {
+  border-color: color-mix(in oklch, var(--primary) 40%, var(--border));
+  box-shadow:
+    0 1px 0 0 color-mix(in oklch, var(--primary) 18%, transparent) inset,
+    0 12px 32px -12px color-mix(in oklch, var(--primary) 50%, transparent);
+}
+
+/* Active sidebar item — blue glow pill */
+@utility nav-active {
+  background-color: color-mix(in oklch, var(--primary) 15%, transparent);
+  color: var(--primary);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--primary) 25%, transparent) inset;
+}
+
+/* ------------------------------------------------------------
+   UNIVERSAL INTERACTIVE GLOW
+   Every clickable element gets a soft blue halo on hover/focus.
+   Destructive actions glow red. Stars glow gold.
+   ------------------------------------------------------------ */
+@layer base {
+  /* Smooth transitions on anything interactive */
+  .dark button,
+  .dark [role="button"],
+  .dark a[href],
+  .dark input,
+  .dark select,
+  .dark textarea {
+    transition:
+      box-shadow 220ms cubic-bezier(0.4, 0, 0.2, 1),
+      background-color 180ms ease,
+      border-color 180ms ease,
+      color 180ms ease;
+  }
+
+  /* ---------- Default blue glow ---------- */
+  .dark button:not(:disabled):hover,
+  .dark button:not(:disabled):focus-visible,
+  .dark [role="button"]:not([aria-disabled="true"]):hover,
+  .dark [role="button"]:not([aria-disabled="true"]):focus-visible,
+  .dark a[href]:not([class*="font-display"]):hover,
+  .dark a[href]:not([class*="font-display"]):focus-visible {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--primary) 40%, transparent),
+      0 6px 20px -6px color-mix(in oklch, var(--primary) 55%, transparent),
+      0 0 32px -10px color-mix(in oklch, var(--primary) 45%, transparent);
+  }
+
+  /* ---------- Destructive buttons → red glow ---------- */
+  .dark button[class*="bg-destructive"]:not(:disabled):hover,
+  .dark button[class*="bg-destructive"]:not(:disabled):focus-visible {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--destructive) 45%, transparent),
+      0 6px 20px -6px color-mix(in oklch, var(--destructive) 55%, transparent),
+      0 0 32px -10px color-mix(in oklch, var(--destructive) 45%, transparent);
+  }
+
+  /* ---------- Text-destructive (ghost) buttons → red glow ---------- */
+  /* Covers the Report button and any other red-text ghost buttons */
+  .dark button[class*="text-destructive"]:not(:disabled):hover,
+  .dark button[class*="text-destructive"]:not(:disabled):focus-visible {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--destructive) 40%, transparent),
+      0 0 20px -6px color-mix(in oklch, var(--destructive) 50%, transparent);
+  }
+
+  /* ---------- Inputs / selects / textareas → glow on focus ---------- */
+  .dark input:focus-visible,
+  .dark select:focus-visible,
+  .dark textarea:focus-visible {
+    border-color: color-mix(in oklch, var(--primary) 55%, var(--border));
+    box-shadow:
+      0 0 0 3px color-mix(in oklch, var(--primary) 22%, transparent),
+      0 0 20px -6px color-mix(in oklch, var(--primary) 45%, transparent);
+  }
+
+  /* ---------- Table rows → soft inner glow on hover ---------- */
+  .dark tbody tr {
+    transition:
+      box-shadow 220ms ease,
+      background-color 180ms ease;
+  }
+  .dark tbody tr:hover {
+    box-shadow: inset 0 0 32px -12px color-mix(in oklch, var(--primary) 32%, transparent);
+  }
+
+  /* ---------- Star rating → gold glow ---------- */
+  .dark button[class*="text-yellow"]:not(:disabled):hover,
+  .dark button[class*="text-yellow"]:not(:disabled):focus-visible {
+    box-shadow:
+      0 0 0 1px rgba(234, 179, 8, 0.4),
+      0 0 18px -4px rgba(234, 179, 8, 0.6);
+  }
+
+  /* ---------- Active nav item → persistent glow ---------- */
+  .dark a[class*="nav-active"] {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--primary) 35%, transparent),
+      0 4px 16px -8px color-mix(in oklch, var(--primary) 45%, transparent),
+      0 0 24px -10px color-mix(in oklch, var(--primary) 35%, transparent);
+  }
+}
+
+/* ------------------------------------------------------------
+   PHASE 1 COMPAT SHIM
+   Remaps legacy hard-coded gray utilities to theme tokens.
+   ------------------------------------------------------------ */
+.dark .bg-white { background-color: var(--card); }
+.dark .bg-gray-50 { background-color: var(--background); }
+.dark .bg-gray-100 { background-color: var(--muted); }
+.dark .bg-gray-200 { background-color: var(--muted); }
+
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 { color: var(--foreground); }
+
+.dark .text-gray-600,
+.dark .text-gray-500 { color: var(--muted-foreground); }
+
+.dark .text-gray-400 { color: var(--muted-foreground); opacity: 0.8; }
+
+.dark .border-gray-300,
+.dark .border-gray-200,
+.dark .border-gray-100 { border-color: var(--border); }
+
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover,
+.dark .hover\:bg-gray-200:hover { background-color: var(--accent); }
+
+.dark .placeholder\:text-gray-400::placeholder { color: var(--muted-foreground); }

@@ -1,42 +1,100 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { User } from 'lucide-react'
+import { User, Menu, X } from 'lucide-react'
+import Logo from './Logo'
 
 export default function Navbar() {
-  const { user, role } = useAuth()
+  const { user, role, warningCount } = useAuth()
   const location = useLocation()
+  const [open, setOpen] = useState(false)
 
   if (!user) return null
 
-  const linkClass = (path: string) => 
+  const linkClass = (path: string) =>
     `flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-colors ${
-      location.pathname === path 
-        ? 'bg-gray-200 font-medium text-gray-900' 
-        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+      location.pathname === path
+        ? 'nav-active font-medium'
+        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
     }`
 
+  const close = () => setOpen(false)
+
   return (
-    <aside className="w-64 border-r bg-white flex flex-col justify-between p-4 h-full shrink-0">
-      <div className="space-y-6">
-        <Link to="/browse" className="font-bold text-xl block px-4">Study Vault</Link>
-        
-        <nav className="flex flex-col gap-1">
-          <Link to="/browse" className={linkClass('/browse')}>Browse</Link>
-          <Link to="/upload" className={linkClass('/upload')}>Upload</Link>
-          <Link to="/my-uploads" className={linkClass('/my-uploads')}>My Uploads</Link>
-          {role === 'admin' && (
-            <Link to="/admin" className={linkClass('/admin')}>Admin Dashboard</Link>
-          )}
-        </nav>
+    <>
+      {/* Mobile top bar */}
+      <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b bg-card p-4 md:hidden">
+        <Link
+          to="/browse"
+          onClick={close}
+          className="flex items-center gap-2 font-display text-lg font-bold"
+        >
+          <Logo className="text-primary" size={20} />
+          <span>Study Vault</span>
+        </Link>
+        <button
+          onClick={() => setOpen(!open)}
+          aria-label="Toggle menu"
+          className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          {open ? <X size={20} /> : <Menu size={20} />}
+        </button>
       </div>
 
-      {/* Account is pinned to the bottom */}
-      <div>
-        <Link to="/account" className={linkClass('/account')}>
-          <User size={16} />
-          <span>Account</span>
-        </Link>
-      </div>
-    </aside>
+      {/* Mobile backdrop */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          onClick={close}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 transform flex-col justify-between border-r bg-card p-4 transition-transform duration-200 md:static md:translate-x-0 ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="space-y-6">
+          <Link
+            to="/browse"
+            onClick={close}
+            className="hidden items-center gap-2 px-4 font-display text-xl font-bold tracking-tight text-foreground md:flex"
+          >
+            <Logo className="text-primary" size={22} />
+            <span>Study Vault</span>
+          </Link>
+
+          <nav className="flex flex-col gap-1 pt-14 md:pt-0">
+            <Link to="/browse" onClick={close} className={linkClass('/browse')}>
+              Browse
+            </Link>
+            <Link to="/upload" onClick={close} className={linkClass('/upload')}>
+              Upload
+            </Link>
+            <Link to="/my-uploads" onClick={close} className={linkClass('/my-uploads')}>
+              My Uploads
+            </Link>
+            {role === 'admin' && (
+              <Link to="/admin" onClick={close} className={linkClass('/admin')}>
+                Admin Dashboard
+              </Link>
+            )}
+          </nav>
+        </div>
+
+        <div>
+          <Link to="/account" onClick={close} className={linkClass('/account')}>
+            <User size={16} />
+            <span>Account</span>
+            {warningCount > 0 && (
+              <span className="ml-auto rounded-full bg-destructive/15 px-1.5 py-0.5 text-xs font-medium text-destructive">
+                {warningCount}
+              </span>
+            )}
+          </Link>
+        </div>
+      </aside>
+    </>
   )
 }

@@ -1,0 +1,2121 @@
+﻿
+--- FILE: button.tsx ---
+
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "../../lib/utils" 
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        outline: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-md px-8",
+        icon: "h-9 w-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+
+--- FILE: card.tsx ---
+
+import * as React from "react"
+import { cn } from "../../lib/utils" 
+
+const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("rounded-xl border bg-card text-card-foreground shadow", className)} {...props} />
+  )
+)
+Card.displayName = "Card"
+
+const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
+  )
+)
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, ...props }, ref) => (
+    <h3 ref={ref} className={cn("font-semibold leading-none tracking-tight", className)} {...props} />
+  )
+)
+CardTitle.displayName = "CardTitle"
+
+const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  )
+)
+CardContent.displayName = "CardContent"
+
+export { Card, CardHeader, CardTitle, CardContent }
+
+--- FILE: dialog.tsx ---
+
+import * as React from "react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { X } from "lucide-react"
+import { cn } from "../../lib/utils"
+
+const Dialog = DialogPrimitive.Root
+const DialogTrigger = DialogPrimitive.Trigger
+const DialogPortal = DialogPrimitive.Portal
+const DialogClose = DialogPrimitive.Close
+
+const DialogOverlay = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Overlay
+    ref={ref}
+    className={cn(
+      "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
+    {...props}
+  />
+))
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+
+const DialogContent = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <DialogPortal>
+    <DialogOverlay />
+    <DialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:pointer-events-none">
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+      </DialogPrimitive.Close>
+    </DialogPrimitive.Content>
+  </DialogPortal>
+))
+DialogContent.displayName = DialogPrimitive.Content.displayName
+
+const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />
+)
+DialogHeader.displayName = "DialogHeader"
+
+const DialogTitle = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+    {...props}
+  />
+))
+DialogTitle.displayName = DialogPrimitive.Title.displayName
+
+export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+}
+
+--- FILE: input.tsx ---
+
+import * as React from "react"
+import { cn } from "../../lib/utils" 
+
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Input.displayName = "Input"
+
+export { Input }
+
+--- FILE: popover.tsx ---
+
+import * as React from "react"
+import * as PopoverPrimitive from "@radix-ui/react-popover"
+import { cn } from "../../lib/utils"
+
+const Popover = PopoverPrimitive.Root
+const PopoverTrigger = PopoverPrimitive.Trigger
+
+const PopoverContent = React.forwardRef<
+  React.ElementRef<typeof PopoverPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
+>(({ className, align = "end", sideOffset = 4, ...props }, ref) => (
+  <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Content
+      ref={ref}
+      align={align}
+      sideOffset={sideOffset}
+      className={cn(
+        "z-50 w-72 rounded-md border bg-white p-3 text-popover-foreground shadow-md outline-none",
+        className
+      )}
+      {...props}
+    />
+  </PopoverPrimitive.Portal>
+))
+PopoverContent.displayName = PopoverPrimitive.Content.displayName
+
+export { Popover, PopoverTrigger, PopoverContent }
+
+--- FILE: ConfirmDialog.tsx ---
+
+import { Button } from './ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog'
+
+interface Props {
+  open: boolean
+  onClose: () => void
+  onConfirm: () => void
+  title: string
+  description: string
+  confirmText?: string
+  destructive?: boolean
+}
+
+export default function ConfirmDialog({
+  open,
+  onClose,
+  onConfirm,
+  title,
+  description,
+  confirmText = 'Confirm',
+  destructive = false,
+}: Props) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-gray-500 mt-2">{description}</p>
+        <div className="flex gap-2 justify-end mt-4">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button
+            variant={destructive ? 'destructive' : 'default'}
+            onClick={() => { onConfirm(); onClose() }}
+          >
+            {confirmText}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+--- FILE: Layout.tsx ---
+
+import { Outlet } from 'react-router-dom'
+import Sidebar from './Sidebar'
+
+export default function Layout() {
+  return (
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-8 max-w-7xl mx-auto">
+          <Outlet />
+        </div>
+      </main>
+    </div>
+  )
+}
+
+--- FILE: Navbar.tsx ---
+
+import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { User } from 'lucide-react'
+
+export default function Navbar() {
+  const { user, role } = useAuth()
+  const location = useLocation()
+
+  if (!user) return null
+
+  const linkClass = (path: string) => 
+    `flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-colors ${
+      location.pathname === path 
+        ? 'bg-gray-200 font-medium text-gray-900' 
+        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+    }`
+
+  return (
+    <aside className="w-64 border-r bg-white flex flex-col justify-between p-4 h-full shrink-0">
+      <div className="space-y-6">
+        <Link to="/browse" className="font-bold text-xl block px-4">Study Vault</Link>
+        
+        <nav className="flex flex-col gap-1">
+          <Link to="/browse" className={linkClass('/browse')}>Browse</Link>
+          <Link to="/upload" className={linkClass('/upload')}>Upload</Link>
+          <Link to="/my-uploads" className={linkClass('/my-uploads')}>My Uploads</Link>
+          {role === 'admin' && (
+            <Link to="/admin" className={linkClass('/admin')}>Admin Dashboard</Link>
+          )}
+        </nav>
+      </div>
+
+      {/* Account is pinned to the bottom */}
+      <div>
+        <Link to="/account" className={linkClass('/account')}>
+          <User size={16} />
+          <span>Account</span>
+        </Link>
+      </div>
+    </aside>
+  )
+}
+
+--- FILE: ReportButton.tsx ---
+
+import { useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { Button } from './ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog'
+import { toast } from 'sonner'
+
+interface Props {
+  resourceId: string
+}
+
+export default function ReportButton({ resourceId }: Props) {
+  const { user } = useAuth()
+  const [category, setCategory] = useState('Inappropriate Content')
+  const [customReason, setCustomReason] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false)
+
+  const submitReport = async () => {
+    if (!user) return toast.error('You must be logged in to report a resource.')
+    
+    const finalReason = category === 'Other' ? customReason.trim() : category
+    if (category === 'Other' && !finalReason) {
+      return toast.error('Please describe the issue.')
+    }
+
+    setLoading(true)
+
+    const { data: existingReport } = await supabase
+      .from('reports')
+      .select('report_id')
+      .eq('user_id', user.id)
+      .eq('resource_id', resourceId)
+      .maybeSingle()
+
+    if (existingReport) {
+      toast.error('You have already reported this resource.')
+      setOpen(false)
+      setLoading(false)
+      return
+    }
+
+    const { error } = await supabase.from('reports').insert({
+      resource_id: resourceId,
+      user_id: user.id,
+      reason: finalReason,
+      status: 'Pending'
+    })
+
+    if (error) {
+      if (error.code === '23505') toast.error('You have already reported this resource.')
+      else toast.error('Error submitting report: ' + error.message)
+    } else {
+      toast.success('Report submitted successfully.')
+      setOpen(false)
+      setCategory('Inappropriate Content')
+      setCustomReason('')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 gap-1 h-8 px-2">
+          ðŸš© Report
+        </Button>
+      </DialogTrigger>
+      
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Report Resource</DialogTitle>
+        </DialogHeader>
+        
+        <div className="grid gap-4 py-4">
+          <select 
+            className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm"
+            value={category} 
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="Inappropriate Content">Inappropriate Content</option>
+            <option value="Spam or Duplicate">Spam or Duplicate</option>
+            <option value="Wrong Information">Wrong Information</option>
+            <option value="Other">Other (please describe)</option>
+          </select>
+
+          {category === 'Other' && (
+            <div>
+              <textarea
+                maxLength={250}
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                placeholder="Describe the issue..."
+                value={customReason}
+                onChange={(e) => setCustomReason(e.target.value)}
+              />
+              <p className="text-xs text-gray-400 text-right mt-1">{customReason.length}/250</p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={submitReport} disabled={loading}>
+            {loading ? 'Submitting...' : 'Submit Report'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+--- FILE: Sidebar.tsx ---
+
+import { NavLink, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
+import { Button } from './ui/button'
+
+export default function Sidebar() {
+  const { user, role } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    navigate('/login')
+  }
+
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    `flex items-center px-4 py-2.5 text-sm rounded-md transition-colors ${
+      isActive
+        ? 'bg-blue-50 text-blue-700 font-medium'
+        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+    }`
+
+  return (
+    <aside className="w-64 bg-white border-r flex flex-col justify-between hidden md:flex h-full">
+      <div>
+        <div className="p-6">
+          <h1 className="text-xl font-bold text-gray-900 tracking-tight">Study Vault</h1>
+        </div>
+        <nav className="px-3 space-y-1">
+          <NavLink to="/browse" className={linkClass}>Browse Resources</NavLink>
+          <NavLink to="/upload" className={linkClass}>Upload Resource</NavLink>
+          <NavLink to="/my-uploads" className={linkClass}>My Uploads</NavLink>
+          
+          {role === 'admin' && (
+            <>
+              <div className="pt-6 pb-2 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Admin
+              </div>
+              <NavLink to="/admin" className={linkClass}>Dashboard</NavLink>
+            </>
+          )}
+        </nav>
+      </div>
+      
+      <div className="p-4 border-t space-y-3">
+        <p className="text-xs text-gray-500 truncate px-2">{user?.email}</p>
+        <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
+          Logout
+        </Button>
+      </div>
+    </aside>
+  )
+}
+
+--- FILE: StarRating.tsx ---
+
+import { useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+
+interface Props {
+  resourceId: string
+  averageRating: number
+  totalRatings: number
+  onRatingChange: () => void
+}
+
+export default function StarRating({ resourceId, averageRating, totalRatings, onRatingChange }: Props) {
+  const { user } = useAuth()
+  const [hover, setHover] = useState(0)
+  const [loading, setLoading] = useState(false)
+
+  const handleRate = async (value: number) => {
+    if (!user) return alert('You must be logged in to rate.')
+    setLoading(true)
+    
+    // Upsert: Insert if new, Update if user already rated this resource
+    const { error } = await supabase
+      .from('ratings')
+      .upsert(
+        { user_id: user.id, resource_id: resourceId, rating_value: value },
+        { onConflict: 'user_id, resource_id' }
+      )
+
+    if (error) alert(error.message)
+    else onRatingChange() // Refresh the parent component to show new average
+    setLoading(false)
+  }
+
+  return (
+    <div className="flex items-center space-x-2">
+      <div className="flex">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            disabled={loading}
+            className={`text-xl ${(hover || Math.round(averageRating)) >= star ? 'text-yellow-500' : 'text-gray-300'}`}
+            onMouseEnter={() => setHover(star)}
+            onMouseLeave={() => setHover(0)}
+            onClick={() => handleRate(star)}
+          >
+            â˜…
+          </button>
+        ))}
+      </div>
+      <span className="text-sm text-gray-500">
+        {averageRating ? averageRating.toFixed(1) : '0.0'} ({totalRatings || 0})
+      </span>
+    </div>
+  )
+}
+
+--- FILE: StatusBadge.tsx ---
+
+interface Props {
+  status: string
+}
+
+export default function StatusBadge({ status }: Props) {
+  const styles: Record<string, string> = {
+    Pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    Approved: 'bg-green-100 text-green-700 border-green-200',
+    Rejected: 'bg-red-100 text-red-700 border-red-200',
+    Resolved: 'bg-green-100 text-green-700 border-green-200',
+    Dismissed: 'bg-gray-100 text-gray-600 border-gray-200',
+  }
+
+  const cls = styles[status] || 'bg-gray-100 text-gray-600 border-gray-200'
+
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${cls}`}>
+      {status}
+    </span>
+  )
+}
+
+--- FILE: AuthContext.tsx ---
+
+import { createContext, useContext, useEffect, useState } from 'react'
+import type { User } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
+
+type AuthContextType = {
+  user: User | null
+  role: string | null
+  loading: boolean
+}
+
+const AuthContext = createContext<AuthContextType>({ user: null, role: null, loading: true })
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [role, setRole] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchRole = async (userId: string) => {
+      const { data } = await supabase.from('users').select('role').eq('user_id', userId).single()
+      setRole(data?.role ?? 'student')
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (session?.user) fetchRole(session.user.id)
+      setLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) fetchRole(session.user.id)
+      else setRole(null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return (
+    <AuthContext.Provider value={{ user, role, loading }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export const useAuth = () => useContext(AuthContext)
+
+--- FILE: supabase.ts ---
+
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+--- FILE: utils.ts ---
+
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+--- FILE: AccountPage.tsx ---
+
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+
+export default function AccountPage() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [name, setName] = useState('')
+  const [role, setRole] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [pwMessage, setPwMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchProfile()
+  }, [])
+
+  const fetchProfile = async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('users')
+      .select('name, role')
+      .eq('user_id', user.id)
+      .single()
+    if (data) {
+      setName(data.name || '')
+      setRole(data.role || 'student')
+    }
+  }
+
+  const handleSaveName = async () => {
+    if (!user || !name.trim()) return
+    setLoading(true)
+    setMessage(null)
+
+    const { error } = await supabase
+      .from('users')
+      .update({ name: name.trim(), updated_at: new Date().toISOString() })
+      .eq('user_id', user.id)
+
+    if (error) setMessage('Error: ' + error.message)
+    else setMessage('Name updated successfully.')
+    setLoading(false)
+  }
+
+  const handleChangePassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      setPwMessage('Password must be at least 6 characters.')
+      return
+    }
+    setPasswordLoading(true)
+    setPwMessage(null)
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+
+    if (error) setPwMessage('Error: ' + error.message)
+    else {
+      setPwMessage('Password updated successfully.')
+      setNewPassword('')
+    }
+    setPasswordLoading(false)
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    navigate('/login')
+  }
+
+  if (!user) return <div className="p-8">Loading...</div>
+
+  return (
+    <div className="p-8 max-w-2xl mx-auto space-y-6">
+      <h1 className="text-2xl font-bold">Account Details</h1>
+
+      {/* Profile Info */}
+      <Card>
+        <CardHeader><CardTitle>Profile</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium block mb-1">Email</label>
+            <Input value={user.email || ''} disabled className="bg-gray-50" />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium block mb-1">Role</label>
+            <Input value={role} disabled className="bg-gray-50 capitalize" />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium block mb-1">Display Name</label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name"
+            />
+          </div>
+
+          {message && (
+            <p className={`text-sm ${message.startsWith('Error') ? 'text-red-500' : 'text-green-600'}`}>
+              {message}
+            </p>
+          )}
+
+          <Button onClick={handleSaveName} disabled={loading}>
+            {loading ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Change Password */}
+      <Card>
+        <CardHeader><CardTitle>Change Password</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium block mb-1">New Password</label>
+            <Input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="At least 6 characters"
+            />
+          </div>
+
+          {pwMessage && (
+            <p className={`text-sm ${pwMessage.startsWith('Error') || pwMessage.includes('must') ? 'text-red-500' : 'text-green-600'}`}>
+              {pwMessage}
+            </p>
+          )}
+
+          <Button onClick={handleChangePassword} disabled={passwordLoading} variant="outline">
+            {passwordLoading ? 'Updating...' : 'Update Password'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Logout Section */}
+      <Card>
+        <CardHeader><CardTitle>Logout</CardTitle></CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-500 mb-4">End your current session safely.</p>
+          <Button variant="destructive" onClick={handleLogout}>Logout</Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+--- FILE: AdminDashboard.tsx ---
+
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Button } from '../components/ui/button'
+import StatusBadge from '../components/StatusBadge'
+import ConfirmDialog from '../components/ConfirmDialog'
+import { toast } from 'sonner'
+import { Users, FileText, Flag, Eye, Check, X, RotateCcw } from 'lucide-react'
+
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<any>(null)
+  const [reports, setReports] = useState<any[]>([])
+  const [resources, setResources] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'reports' | 'uploads'>('reports')
+
+  // Confirmation dialog state
+  const [confirm, setConfirm] = useState<{
+    open: boolean
+    title: string
+    description: string
+    confirmText: string
+    destructive: boolean
+    onConfirm: () => void
+  }>({ open: false, title: '', description: '', confirmText: '', destructive: false, onConfirm: () => {} })
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    setLoading(true)
+
+    const { data: statsData } = await supabase.rpc('get_admin_dashboard_stats')
+    setStats(statsData)
+
+    const { data: reportsData } = await supabase
+      .from('reports')
+      .select(`
+        report_id, reason, status, created_at,
+        resources!reports_resource_id_fkey (resource_id, title, file, status),
+        users!reports_user_id_fkey (email)
+      `)
+      .order('created_at', { ascending: false })
+    setReports(reportsData || [])
+
+    const { data: resourcesData } = await supabase
+      .from('resources')
+      .select('*')
+      .order('created_at', { ascending: false })
+    setResources(resourcesData || [])
+
+    setLoading(false)
+  }
+
+  // --- Reports Tab Actions ---
+  const handleDismiss = (reportId: number) => {
+    setConfirm({
+      open: true,
+      title: 'Dismiss Report?',
+      description: 'This report will be marked as resolved, but the resource will stay visible.',
+      confirmText: 'Dismiss',
+      destructive: false,
+      onConfirm: async () => {
+        const { error } = await supabase
+          .from('reports')
+          .update({ status: 'Resolved' })
+          .eq('report_id', reportId)
+        if (error) toast.error(error.message)
+        else toast.success('Report dismissed.')
+        fetchData()
+      },
+    })
+  }
+
+  const handleHideFromReport = (reportId: number, resourceId: string | undefined) => {
+    if (!resourceId) return toast.error('This resource no longer exists.')
+    setConfirm({
+      open: true,
+      title: 'Hide Resource?',
+      description: 'The resource will be removed from Browse. The report will be marked as resolved.',
+      confirmText: 'Hide',
+      destructive: true,
+      onConfirm: async () => {
+        await supabase.from('reports').update({ status: 'Resolved' }).eq('report_id', reportId)
+        const { error } = await supabase.from('resources').update({ status: 'Rejected' }).eq('resource_id', resourceId)
+        if (error) toast.error(error.message)
+        else toast.success('Resource hidden.')
+        fetchData()
+      },
+    })
+  }
+
+  const handleRestore = (resourceId: string | undefined) => {
+    if (!resourceId) return
+    setConfirm({
+      open: true,
+      title: 'Restore Resource?',
+      description: 'The resource will become visible on the Browse page again.',
+      confirmText: 'Restore',
+      destructive: false,
+      onConfirm: async () => {
+        const { error } = await supabase.from('resources').update({ status: 'Approved' }).eq('resource_id', resourceId)
+        if (error) toast.error(error.message)
+        else toast.success('Resource restored.')
+        fetchData()
+      },
+    })
+  }
+
+  // --- Uploads Tab Actions ---
+  const handleApproveUpload = async (resourceId: string) => {
+    const { error } = await supabase.from('resources').update({ status: 'Approved' }).eq('resource_id', resourceId)
+    if (error) toast.error(error.message)
+    else toast.success('Resource approved.')
+    fetchData()
+  }
+
+  const handleRejectUpload = (resourceId: string) => {
+    setConfirm({
+      open: true,
+      title: 'Hide this Resource?',
+      description: 'It will be removed from the Browse page. You can restore it later from this same tab.',
+      confirmText: 'Hide',
+      destructive: true,
+      onConfirm: async () => {
+        const { error } = await supabase.from('resources').update({ status: 'Rejected' }).eq('resource_id', resourceId)
+        if (error) toast.error(error.message)
+        else toast.success('Resource hidden.')
+        fetchData()
+      },
+    })
+  }
+
+  if (loading) return <div className="p-8 text-gray-500">Loading dashboard...</div>
+
+  const totalUsers = stats?.total_users || stats?.users || 0
+  const totalResources = stats?.total_resources || stats?.resources || 0
+  const pendingReports = stats?.pending_reports || reports.filter((r) => r.status === 'Pending').length || 0
+
+  return (
+    <div className="p-8 max-w-6xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <p className="text-gray-500 mt-1">Manage your platform</p>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Total Users</p>
+                <p className="text-3xl font-bold mt-1">{totalUsers}</p>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <Users className="text-blue-600" size={22} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Total Resources</p>
+                <p className="text-3xl font-bold mt-1">{totalResources}</p>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                <FileText className="text-purple-600" size={22} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Pending Reports</p>
+                <p className={`text-3xl font-bold mt-1 ${pendingReports > 0 ? 'text-red-600' : ''}`}>
+                  {pendingReports}
+                </p>
+              </div>
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${pendingReports > 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
+                <Flag className={pendingReports > 0 ? 'text-red-600' : 'text-gray-400'} size={22} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b gap-6">
+        <button
+          onClick={() => setActiveTab('reports')}
+          className={`pb-3 px-1 text-sm font-medium transition-colors relative ${
+            activeTab === 'reports' ? 'text-black' : 'text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          Manage Reports
+          {pendingReports > 0 && (
+            <span className="ml-2 px-1.5 py-0.5 text-xs bg-red-100 text-red-700 rounded-full">
+              {pendingReports}
+            </span>
+          )}
+          {activeTab === 'reports' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />}
+        </button>
+        <button
+          onClick={() => setActiveTab('uploads')}
+          className={`pb-3 px-1 text-sm font-medium transition-colors relative ${
+            activeTab === 'uploads' ? 'text-black' : 'text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          Recent Uploads ({resources.length})
+          {activeTab === 'uploads' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />}
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'reports' ? (
+        <Card>
+          <CardContent className="p-0">
+            {reports.length === 0 ? (
+              <div className="text-center py-16">
+                <Flag className="mx-auto text-gray-300 mb-3" size={40} />
+                <p className="text-gray-500">No reports submitted yet.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b text-gray-600">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-medium">Resource</th>
+                      <th className="text-left px-4 py-3 font-medium">Reason</th>
+                      <th className="text-left px-4 py-3 font-medium">Reported By</th>
+                      <th className="text-left px-4 py-3 font-medium">Status</th>
+                      <th className="text-right px-4 py-3 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {reports.map((r) => (
+                      <tr key={r.report_id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-gray-900">
+                            {r.resources?.title || 'Deleted Resource'}
+                          </div>
+                          {r.resources?.status === 'Rejected' && (
+                            <span className="text-xs text-red-500">Hidden</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 max-w-xs">
+                          <span className="line-clamp-2">{r.reason}</span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500">{r.users?.email || 'Unknown'}</td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={r.status} />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end gap-2">
+                            {r.status !== 'Resolved' && (
+                              <Button size="sm" variant="outline" onClick={() => handleDismiss(r.report_id)} className="h-8">
+                                Dismiss
+                              </Button>
+                            )}
+                            {r.resources && (
+                              r.resources.status === 'Rejected' ? (
+                                <Button size="sm" variant="outline" onClick={() => handleRestore(r.resources?.resource_id)} className="h-8 gap-1">
+                                  <RotateCcw size={14} /> Restore
+                                </Button>
+                              ) : (
+                                <Button size="sm" variant="destructive" onClick={() => handleHideFromReport(r.report_id, r.resources?.resource_id)} className="h-8 gap-1">
+                                  <X size={14} /> Hide
+                                </Button>
+                              )
+                            )}
+                            {r.resources?.file && (
+                              <Button size="sm" variant="ghost" asChild className="h-8 gap-1">
+                                <a href={r.resources.file} target="_blank" rel="noopener noreferrer">
+                                  <Eye size={14} /> View
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            {resources.length === 0 ? (
+              <div className="text-center py-16">
+                <FileText className="mx-auto text-gray-300 mb-3" size={40} />
+                <p className="text-gray-500">No resources uploaded yet.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b text-gray-600">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-medium">Title</th>
+                      <th className="text-left px-4 py-3 font-medium">Department</th>
+                      <th className="text-left px-4 py-3 font-medium">Subject</th>
+                      <th className="text-left px-4 py-3 font-medium">Status</th>
+                      <th className="text-right px-4 py-3 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {resources.map((res) => (
+                      <tr key={res.resource_id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 font-medium text-gray-900">{res.title}</td>
+                        <td className="px-4 py-3 text-gray-600">{res.department}</td>
+                        <td className="px-4 py-3 text-gray-600">{res.subject}</td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={res.status} />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end gap-2">
+                            {res.status === 'Pending' && (
+                              <>
+                                <Button size="sm" onClick={() => handleApproveUpload(res.resource_id)} className="h-8 gap-1">
+                                  <Check size={14} /> Approve
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={() => handleRejectUpload(res.resource_id)} className="h-8 gap-1">
+                                  <X size={14} /> Hide
+                                </Button>
+                              </>
+                            )}
+                            {res.status === 'Rejected' && (
+                              <Button size="sm" variant="outline" onClick={() => handleRestore(res.resource_id)} className="h-8 gap-1">
+                                <RotateCcw size={14} /> Restore
+                              </Button>
+                            )}
+                            {res.status === 'Approved' && (
+                              <Button size="sm" variant="outline" onClick={() => handleRejectUpload(res.resource_id)} className="h-8 gap-1">
+                                <X size={14} /> Hide
+                              </Button>
+                            )}
+                            <Button size="sm" variant="ghost" asChild className="h-8 gap-1">
+                              <a href={res.file} target="_blank" rel="noopener noreferrer">
+                                <Eye size={14} /> View
+                              </a>
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        open={confirm.open}
+        onClose={() => setConfirm((c) => ({ ...c, open: false }))}
+        onConfirm={confirm.onConfirm}
+        title={confirm.title}
+        description={confirm.description}
+        confirmText={confirm.confirmText}
+        destructive={confirm.destructive}
+      />
+    </div>
+  )
+}
+
+--- FILE: BrowsePage.tsx ---
+
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { Input } from '../components/ui/input'
+import { Button } from '../components/ui/button'
+import StarRating from '../components/StarRating'
+import ReportButton from '../components/ReportButton'
+import { Download } from 'lucide-react'
+
+export default function BrowsePage() {
+  const [resources, setResources] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    fetchResources()
+  }, [])
+
+  const fetchResources = async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('resources')
+      .select('*, resource_ratings_view(average_rating, total_ratings)')
+      .eq('status', 'Approved')
+
+    if (error) console.error('Error fetching resources:', error)
+    else setResources(data || [])
+    setLoading(false)
+  }
+
+  const filtered = resources.filter(r =>
+    r.title?.toLowerCase().includes(search.toLowerCase()) ||
+    r.subject?.toLowerCase().includes(search.toLowerCase()) ||
+    r.department?.toLowerCase().includes(search.toLowerCase())
+  )
+
+  return (
+    <div className="p-8 max-w-6xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Browse Resources</h1>
+        <Input
+          placeholder="Search by title, subject, or department..."
+          className="max-w-sm bg-white"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {loading ? (
+        <p className="text-gray-500">Loading resources...</p>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg bg-white">
+          <p className="text-gray-500">No approved resources found.</p>
+        </div>
+      ) : (
+        <div className="border rounded-lg overflow-hidden bg-white shadow-sm overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-gray-50 border-b text-gray-600 font-medium">
+              <tr>
+                <th className="px-4 py-3">Title</th>
+                <th className="px-4 py-3">Department</th>
+                <th className="px-4 py-3">Subject / Sem</th>
+                <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Rating</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filtered.map((resource) => (
+                <tr key={resource.resource_id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3 font-medium text-gray-900">{resource.title}</td>
+                  <td className="px-4 py-3 text-gray-600">{resource.department}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {resource.subject} <span className="text-gray-400">â€¢ Sem {resource.semester}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                      {resource.category}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <StarRating
+                      resourceId={resource.resource_id}
+                      averageRating={resource.resource_ratings_view?.[0]?.average_rating || 0}
+                      totalRatings={resource.resource_ratings_view?.[0]?.total_ratings || 0}
+                      onRatingChange={fetchResources}
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button size="sm" asChild variant="outline" className="gap-1 h-8">
+                        <a href={resource.file} target="_blank" rel="noopener noreferrer">
+                          <Download size={14} /> View
+                        </a>
+                      </Button>
+                      <ReportButton resourceId={resource.resource_id} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+--- FILE: LoginPage.tsx ---
+
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      navigate('/browse')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Log In to Study Vault</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <Input 
+              type="email" 
+              placeholder="Email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required 
+            />
+            <Input 
+              type="password" 
+              placeholder="Password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+            />
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? 'Logging in...' : 'Log In'}
+            </Button>
+          </form>
+          <p className="mt-4 text-center text-sm">
+            Don't have an account? <Link to="/signup" className="text-blue-600">Sign Up</Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+--- FILE: MyUploadsPage.tsx ---
+
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { Input } from '../components/ui/input'
+import { Button } from '../components/ui/button'
+
+export default function MyUploadsPage() {
+  const { user } = useAuth()
+  const [uploads, setUploads] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    fetchUploads()
+  }, [])
+
+  const fetchUploads = async () => {
+    if (!user) return
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('resources')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) console.error('Error fetching uploads:', error)
+    else setUploads(data || [])
+    setLoading(false)
+  }
+
+  const handleDelete = async (resourceId: string, fileUrl: string) => {
+    if (!confirm('Are you sure you want to delete this upload? This cannot be undone.')) return
+
+    // 1. Delete the physical file from Storage
+    const path = fileUrl.split('/study-vault-files/')[1]
+    if (path) {
+      await supabase.storage.from('study-vault-files').remove([path])
+    }
+
+    // 2. Delete the database row
+    const { error } = await supabase
+      .from('resources')
+      .delete()
+      .eq('resource_id', resourceId)
+
+    if (error) alert('Error deleting: ' + error.message)
+    else fetchUploads()
+  }
+
+  const filtered = uploads.filter(r =>
+    r.title?.toLowerCase().includes(search.toLowerCase()) ||
+    r.subject?.toLowerCase().includes(search.toLowerCase())
+  )
+
+  return (
+    <div className="p-8 max-w-5xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">My Uploads</h1>
+        <Input
+          placeholder="Search my uploads..."
+          className="max-w-sm"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {loading ? (
+        <p>Loading your uploads...</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-gray-500">You haven't uploaded any resources yet.</p>
+      ) : (
+        <div className="border rounded-md bg-white divide-y">
+          {filtered.map((resource) => (
+            <div
+              key={resource.resource_id}
+              className="flex flex-col md:flex-row md:items-center justify-between p-4 gap-4 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex-1 space-y-1">
+                <h3 className="font-semibold text-base">{resource.title}</h3>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                  <span>{resource.degree}</span>
+                  <span>Dept: {resource.department}</span>
+                  <span>Semester: {resource.semester}</span>
+                  <span>Subject: {resource.subject}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  resource.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                  resource.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                  'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {resource.status}
+                </span>
+
+                <div className="flex gap-2">
+                  <Button asChild size="sm" variant="outline">
+                    <a href={resource.file} target="_blank" rel="noopener noreferrer">View</a>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDelete(resource.resource_id, resource.file)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+--- FILE: SignUpPage.tsx ---
+
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+
+export default function SignUpPage() {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    // Pass 'name' in options.data so the database trigger can read it
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } }
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      navigate('/browse')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Create an Account</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSignUp} className="space-y-4">
+            <Input 
+              placeholder="Full Name" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              required 
+            />
+            <Input 
+              type="email" 
+              placeholder="Email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required 
+            />
+            <Input 
+              type="password" 
+              placeholder="Password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+            />
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? 'Creating account...' : 'Sign Up'}
+            </Button>
+          </form>
+          <p className="mt-4 text-center text-sm">
+            Already have an account? <Link to="/login" className="text-blue-600">Log In</Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+--- FILE: UploadPage.tsx ---
+
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+
+// Define all departments for each degree
+const degreeDepartments: Record<string, string[]> = {
+  'B.Tech': ['Information Technology', 'Electronics & Communication Engineering', 'Energy Engineering', 'Biomedical Engineering'],
+  'B.Arch': ['Architecture'],
+  'B.Sc': ['Physics', 'Chemistry', 'Mathematics', 'Statistics', 'Botany', 'Zoology', 'Environmental Science', 'Biotechnology', 'Computer Science'],
+  'B.A': ['English', 'History', 'Political Science', 'Economics', 'Sociology', 'Philosophy', 'Education', 'Khasi', 'Garo', 'Geography'],
+  'B.A. LL.B (Hons)': ['Law'],
+  'BBA': ['Management'],
+  'B.Com': ['Commerce'],
+  'BCA': ['Computer Application'],
+  'BTTM': ['Tourism and Travel Management'],
+  'M.Tech': ['Information Technology', 'Electronics & Communication Engineering', 'Energy Engineering', 'Biomedical Engineering'],
+  'M.Sc': ['Physics', 'Chemistry', 'Mathematics', 'Statistics', 'Botany', 'Zoology', 'Environmental Science', 'Biotechnology', 'Computer Science', 'Geology', 'Geography', 'Anthropology'],
+  'M.A': ['English', 'History', 'Political Science', 'Economics', 'Sociology', 'Philosophy', 'Education', 'Khasi', 'Garo', 'Geography', 'Linguistics', 'Cultural & Creative Studies'],
+  'M.Com': ['Commerce'],
+  'MBA': ['Management'],
+  'MCA': ['Computer Application'],
+  'LL.M': ['Law'],
+  'M.Ed': ['Education'],
+  'Int. M.Sc': ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology'],
+  'Int. M.A': ['English', 'History', 'Political Science', 'Economics'],
+  'Int. M.Tech': ['Information Technology', 'Electronics & Communication Engineering']
+}
+
+// Define the total number of semesters for each degree
+const degreeSemesterCount: Record<string, number> = {
+  'B.Tech': 8,
+  'B.Arch': 10,
+  'B.Sc': 6,
+  'B.A': 6,
+  'B.A. LL.B (Hons)': 10,
+  'BBA': 6,
+  'B.Com': 6,
+  'BCA': 6,
+  'BTTM': 6,
+  'M.Tech': 4,
+  'M.Sc': 4,
+  'M.A': 4,
+  'M.Com': 4,
+  'MBA': 4,
+  'MCA': 4,
+  'LL.M': 4,
+  'M.Ed': 4,
+  'Int. M.Sc': 10,
+  'Int. M.A': 10,
+  'Int. M.Tech': 10
+}
+
+export default function UploadPage() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const [title, setTitle] = useState('')
+  const [degree, setDegree] = useState('')
+  const [department, setDepartment] = useState('')
+  const [semester, setSemester] = useState('')
+  const [subject, setSubject] = useState('')
+  const [category, setCategory] = useState('Notes')
+  const [file, setFile] = useState<File | null>(null)
+
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!file || !user) return
+    setLoading(true)
+    setError(null)
+
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random()}.${fileExt}`
+      const filePath = `${user.id}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('study-vault-files')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('study-vault-files')
+        .getPublicUrl(filePath)
+
+      const { error: dbError } = await supabase
+        .from('resources')
+        .insert({
+          title,
+          degree,
+          department,
+          semester,
+          subject,
+          category,
+          file: publicUrl,
+          status: 'Approved',
+          user_id: user.id
+        })
+
+      if (dbError) throw dbError
+
+      navigate('/browse')
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong during upload.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 py-10">
+      <Card className="w-full max-w-lg">
+        <CardHeader>
+          <CardTitle>Upload a Resource</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleUpload} className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Title</label>
+              <Input 
+                placeholder="e.g., Study Vault ER Diagram" 
+                value={title} 
+                onChange={(e) => setTitle(e.target.value)} 
+                required 
+              />
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Degree</label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                  value={degree}
+                  onChange={(e) => {
+                    setDegree(e.target.value);
+                    setDepartment(''); // Reset department
+                    setSemester('');   // Reset semester
+                  }}
+                  required
+                >
+                  <option value="" disabled>Select Degree</option>
+                  <optgroup label="Undergraduate">
+                    <option value="B.Tech">B.Tech</option>
+                    <option value="B.Arch">B.Arch</option>
+                    <option value="B.Sc">B.Sc</option>
+                    <option value="B.A">B.A</option>
+                    <option value="B.A. LL.B (Hons)">B.A. LL.B (Hons)</option>
+                    <option value="BBA">BBA</option>
+                    <option value="B.Com">B.Com</option>
+                    <option value="BCA">BCA</option>
+                    <option value="BTTM">BTTM</option>
+                  </optgroup>
+                  <optgroup label="Postgraduate">
+                    <option value="M.Tech">M.Tech</option>
+                    <option value="M.Sc">M.Sc</option>
+                    <option value="M.A">M.A</option>
+                    <option value="M.Com">M.Com</option>
+                    <option value="MBA">MBA</option>
+                    <option value="MCA">MCA</option>
+                    <option value="LL.M">LL.M</option>
+                    <option value="M.Ed">M.Ed</option>
+                  </optgroup>
+                  <optgroup label="Integrated">
+                    <option value="Int. M.Sc">Int. M.Sc</option>
+                    <option value="Int. M.A">Int. M.A</option>
+                    <option value="Int. M.Tech">Int. M.Tech</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1 block">Department</label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  required
+                >
+                  {!degree ? (
+                    <option value="" disabled>Please select a Degree first</option>
+                  ) : (
+                    <>
+                      <option value="" disabled>Select Department</option>
+                      {degreeDepartments[degree]?.map((dept) => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1 block">Semester</label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                  value={semester}
+                  onChange={(e) => setSemester(e.target.value)}
+                  required
+                >
+                  {!degree ? (
+                    <option value="" disabled>Please select a Degree first</option>
+                  ) : (
+                    <>
+                      <option value="" disabled>Select Semester</option>
+                      {Array.from({ length: degreeSemesterCount[degree] || 8 }, (_, i) => i + 1).map((s) => (
+                        <option key={s} value={s.toString()}>{s}</option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1 block">Subject</label>
+                <Input
+                  placeholder="e.g., DBMS, Organic Chemistry, Microeconomics"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">Category</label>
+              <select
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                required
+              >
+                <option value="Notes">Notes</option>
+                <option value="Assignments">Assignments</option>
+                <option value="PYQs">PYQs</option>
+                <option value="Lab Materials">Lab Materials</option>
+                <option value="Reference Books">Reference Books</option>
+                <option value="Syllabus">Syllabus</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">File</label>
+              <Input
+                type="file"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                required
+              />
+            </div>
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
+
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? 'Uploading...' : 'Upload Resource'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+--- FILE: App.css ---
+
+.counter {
+  font-size: 16px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+  margin-bottom: 24px;
+
+  &:hover {
+    border-color: var(--accent-border);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.hero {
+  position: relative;
+
+  .base,
+  .framework,
+  .vite {
+    inset-inline: 0;
+    margin: 0 auto;
+  }
+
+  .base {
+    width: 170px;
+    position: relative;
+    z-index: 0;
+  }
+
+  .framework,
+  .vite {
+    position: absolute;
+  }
+
+  .framework {
+    z-index: 1;
+    top: 34px;
+    height: 28px;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
+      scale(1.4);
+  }
+
+  .vite {
+    z-index: 0;
+    top: 107px;
+    height: 26px;
+    width: auto;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
+      scale(0.8);
+  }
+}
+
+#center {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  place-content: center;
+  place-items: center;
+  flex-grow: 1;
+
+  @media (max-width: 1024px) {
+    padding: 32px 20px 24px;
+    gap: 18px;
+  }
+}
+
+#next-steps {
+  display: flex;
+  border-top: 1px solid var(--border);
+  text-align: left;
+
+  & > div {
+    flex: 1 1 0;
+    padding: 32px;
+    @media (max-width: 1024px) {
+      padding: 24px 20px;
+    }
+  }
+
+  .icon {
+    margin-bottom: 16px;
+    width: 22px;
+    height: 22px;
+  }
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+#docs {
+  border-right: 1px solid var(--border);
+
+  @media (max-width: 1024px) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+#next-steps ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  margin: 32px 0 0;
+
+  .logo {
+    height: 18px;
+  }
+
+  a {
+    color: var(--text-h);
+    font-size: 16px;
+    border-radius: 6px;
+    background: var(--social-bg);
+    display: flex;
+    padding: 6px 12px;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: box-shadow 0.3s;
+
+    &:hover {
+      box-shadow: var(--shadow);
+    }
+    .button-icon {
+      height: 18px;
+      width: 18px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    li {
+      flex: 1 1 calc(50% - 8px);
+    }
+
+    a {
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+  }
+}
+
+#spacer {
+  height: 88px;
+  border-top: 1px solid var(--border);
+  @media (max-width: 1024px) {
+    height: 48px;
+  }
+}
+
+.ticks {
+  position: relative;
+  width: 100%;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -4.5px;
+    border: 5px solid transparent;
+  }
+
+  &::before {
+    left: 0;
+    border-left-color: var(--border);
+  }
+  &::after {
+    right: 0;
+    border-right-color: var(--border);
+  }
+}
+
+--- FILE: App.tsx ---
+
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { Toaster } from 'sonner'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import Navbar from './components/Navbar'
+import LoginPage from './pages/LoginPage'
+import SignUpPage from './pages/SignUpPage'
+import BrowsePage from './pages/BrowsePage'
+import UploadPage from './pages/UploadPage'
+import MyUploadsPage from './pages/MyUploadsPage'
+import AdminDashboard from './pages/AdminDashboard'
+import AccountPage from './pages/AccountPage'
+
+function ProtectedRoute() {
+  const { user, loading } = useAuth()
+  if (loading) return <div className="p-8">Loading...</div>
+  return user ? <Outlet /> : <Navigate to="/login" replace />
+}
+
+function AdminRoute() {
+  const { role, loading } = useAuth()
+  if (loading) return <div className="p-8">Loading...</div>
+  if (role === null) return <div className="p-8">Loading role...</div>
+  return role === 'admin' ? <Outlet /> : <Navigate to="/browse" replace />
+}
+
+function ProtectedLayout() {
+  const { user, loading } = useAuth()
+  if (loading) return <div className="p-8">Loading...</div>
+  if (!user) return <Navigate to="/login" replace />
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <Navbar />
+      <main className="flex-1 overflow-y-auto">
+        <Outlet />
+      </main>
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Toaster position="top-right" richColors />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+
+          {/* Protected Routes with Sidebar */}
+          <Route element={<ProtectedLayout />}>
+            <Route path="/browse" element={<BrowsePage />} />
+            <Route path="/upload" element={<UploadPage />} />
+            <Route path="/my-uploads" element={<MyUploadsPage />} />
+            <Route path="/account" element={<AccountPage />} />
+            
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+            </Route>
+            
+            <Route path="*" element={<Navigate to="/browse" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  )
+}
+
+export default App
+
+--- FILE: index.css ---
+
+@import "tailwindcss";
+
+--- FILE: main.tsx ---
+
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
