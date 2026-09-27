@@ -86,14 +86,20 @@ export default function MyUploadsPage() {
   const handleDelete = async () => {
     const { resourceId, fileUrl } = confirm
 
+    // Step 1: delete the physical file FIRST.
+    // If this fails, abort — we'd rather keep the row than create an orphan.
     const path = fileUrl.split('/study-vault-files/')[1]
     if (path) {
       const { error: storageErr } = await supabase.storage
         .from('study-vault-files')
         .remove([path])
-      if (storageErr) console.error('Storage delete failed:', storageErr)
+      if (storageErr) {
+        toast.error('Could not delete file: ' + storageErr.message)
+        return
+      }
     }
 
+    // Step 2: delete the DB row.
     const { error } = await supabase
       .from('resources')
       .delete()

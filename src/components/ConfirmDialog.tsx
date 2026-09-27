@@ -28,10 +28,12 @@ export default function ConfirmDialog({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
-          <DialogTitle className="font-display">{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogTitle className="break-words font-display">{title}</DialogTitle>
+          <DialogDescription className="max-h-48 overflow-y-auto break-all">
+            {description}
+          </DialogDescription>
         </DialogHeader>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

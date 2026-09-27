@@ -14,14 +14,16 @@ import {
   DialogTitle,
 } from '../components/ui/dialog'
 import { toast } from 'sonner'
-import { Trash2, AlertTriangle, AlertOctagon } from 'lucide-react'
+import { Trash2, AlertTriangle, AlertOctagon, Loader2 } from 'lucide-react'
 
 export default function AccountPage() {
-  const { user, warningCount, refreshProfile } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [role, setRole] = useState('')
+  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -77,19 +79,52 @@ export default function AccountPage() {
   }
 
   const handleChangePassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      setPwMessage('Password must be at least 6 characters.')
+    if (!user?.email) return
+
+    if (!currentPassword) {
+      setPwMessage('Please enter your current password.')
       return
     }
+    if (!newPassword || newPassword.length < 6) {
+      setPwMessage('New password must be at least 6 characters.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPwMessage('New passwords do not match.')
+      return
+    }
+    if (newPassword === currentPassword) {
+      setPwMessage('New password must be different from current password.')
+      return
+    }
+
     setPasswordLoading(true)
     setPwMessage(null)
 
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    // Step 1: verify current password by attempting a sign-in
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    })
 
-    if (error) setPwMessage('Error: ' + error.message)
-    else {
+    if (verifyError) {
+      setPwMessage('Current password is incorrect.')
+      setPasswordLoading(false)
+      return
+    }
+
+    // Step 2: now safe to update
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    })
+
+    if (updateError) {
+      setPwMessage('Error: ' + updateError.message)
+    } else {
       setPwMessage('Password updated successfully.')
+      setCurrentPassword('')
       setNewPassword('')
+      setConfirmPassword('')
     }
     setPasswordLoading(false)
   }
@@ -107,6 +142,32 @@ export default function AccountPage() {
     }
 
     setDeleting(true)
+
+    // Step 1: collect all file paths from the user's resources BEFORE deleting
+    const { data: userResources } = await supabase
+      .from('resources')
+      .select('file')
+      .eq('user_id', user.id)
+
+    const paths = (userResources || [])
+      .map((r: any) => {
+        if (!r.file) return null
+        const parts = r.file.split('/study-vault-files/')
+        return parts[1] || null
+      })
+      .filter(Boolean) as string[]
+
+    // Step 2: remove the physical files (best-effort — don't block on failure)
+    if (paths.length > 0) {
+      const { error: storageErr } = await supabase.storage
+        .from('study-vault-files')
+        .remove(paths)
+      if (storageErr) {
+        console.error('Storage cleanup failed:', storageErr)
+      }
+    }
+
+    // Step 3: delete the account (cascades DB rows)
     const { error } = await supabase.rpc('delete_my_account')
 
     if (error) {
@@ -126,7 +187,6 @@ export default function AccountPage() {
     <div className="mx-auto max-w-2xl space-y-6 p-8">
       <h1 className="font-display text-2xl font-bold text-foreground">Account Details</h1>
 
-      {/* Warnings */}
       {warnings.length > 0 && (
         <Card className="border-destructive/40">
           <CardHeader>
@@ -146,7 +206,7 @@ export default function AccountPage() {
                   key={w.warning_id}
                   className="rounded-md border border-destructive/30 bg-destructive/5 p-3"
                 >
-                  <p className="text-sm text-foreground">{w.reason}</p>
+                  <p className="break-words text-sm text-foreground">{w.reason}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {new Date(w.created_at).toLocaleString()}
                   </p>
@@ -206,20 +266,51 @@ export default function AccountPage() {
         <CardContent className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-foreground">
+              Current Password
+            </label>
+            <Input
+              type="password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Enter current password"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-foreground">
               New Password
             </label>
             <Input
               type="password"
+              autoComplete="new-password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="At least 6 characters"
             />
           </div>
 
+          <div>
+            <label className="mb-1 block text-sm font-medium text-foreground">
+              Confirm New Password
+            </label>
+            <Input
+              type="password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter new password"
+            />
+          </div>
+
           {pwMessage && (
             <p
               className={`text-sm ${
-                pwMessage.startsWith('Error') || pwMessage.includes('must')
+                pwMessage.startsWith('Error') ||
+                pwMessage.includes('must') ||
+                pwMessage.includes('incorrect') ||
+                pwMessage.includes('match') ||
+                pwMessage.includes('different')
                   ? 'text-destructive'
                   : 'text-green-500'
               }`}
@@ -228,7 +319,13 @@ export default function AccountPage() {
             </p>
           )}
 
-          <Button onClick={handleChangePassword} disabled={passwordLoading} variant="outline">
+          <Button
+            onClick={handleChangePassword}
+            disabled={passwordLoading}
+            variant="outline"
+            className="gap-2"
+          >
+            {passwordLoading && <Loader2 className="h-4 w-4 animate-spin" />}
             {passwordLoading ? 'Updating...' : 'Update Password'}
           </Button>
         </CardContent>
