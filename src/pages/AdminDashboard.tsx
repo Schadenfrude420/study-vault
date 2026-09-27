@@ -830,7 +830,10 @@ export default function AdminDashboard() {
                         return (
                           <tr key={r.report_id} className="transition-colors hover:bg-muted/50">
                             <td className="px-4 py-3">
-                              <div className="font-medium text-foreground">
+                              <div
+                                className="line-clamp-2 max-w-[200px] break-all font-medium text-foreground"
+                                title={r.resources?.title || 'Deleted Resource'}
+                              >
                                 {r.resources?.title || 'Deleted Resource'}
                               </div>
                               {r.resources?.status === 'Rejected' && (
@@ -957,7 +960,14 @@ export default function AdminDashboard() {
                         const isPending = pendingId === res.resource_id
                         return (
                           <tr key={res.resource_id} className="transition-colors hover:bg-muted/50">
-                            <td className="px-4 py-3 font-medium text-foreground">{res.title}</td>
+                            <td className="px-4 py-3">
+                              <div
+                                className="line-clamp-2 max-w-[200px] break-all font-medium text-foreground"
+                                title={res.title}
+                              >
+                                {res.title}
+                              </div>
+                            </td>
                             <td className="px-4 py-3 text-muted-foreground">{res.department}</td>
                             <td className="px-4 py-3 text-muted-foreground">{res.subject}</td>
                             <td className="px-4 py-3">

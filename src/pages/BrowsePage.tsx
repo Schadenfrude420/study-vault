@@ -14,13 +14,18 @@ import { Download, Search, FileX2, FolderOpen, X, Eye } from 'lucide-react'
 const selectClass =
   'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
 
-type SortKey = 'newest' | 'oldest' | 'rating' | 'title'
+type SortKey = 'newest' | 'oldest' | 'rating' | 'views' | 'title'
 
 const SORT_LABELS: Record<SortKey, string> = {
   newest: 'Newest first',
   oldest: 'Oldest first',
   rating: 'Most rated',
+  views: 'Most viewed',
   title: 'Title A–Z',
+}
+
+function normalize(s: string): string {
+  return s.toLowerCase().replace(/\./g, '')
 }
 
 export default function BrowsePage() {
@@ -89,18 +94,23 @@ export default function BrowsePage() {
   }, [resources])
 
   const filtered = useMemo(() => {
-    const q = debouncedSearch.trim().toLowerCase()
+    const tokens = normalize(debouncedSearch)
+      .split(/\s+/)
+      .filter(Boolean)
+
     const result = resources.filter((r) => {
       if (categoryFilter && r.category !== categoryFilter) return false
       if (degreeFilter && r.degree !== degreeFilter) return false
       if (departmentFilter && r.department !== departmentFilter) return false
       if (semesterFilter && String(r.semester) !== semesterFilter) return false
-      if (q) {
-        const haystack = [r.title, r.subject, r.department, r.degree, r.category]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase()
-        if (!haystack.includes(q)) return false
+
+      if (tokens.length > 0) {
+        const haystack = normalize(
+          [r.title, r.subject, r.department, r.degree, r.category]
+            .filter(Boolean)
+            .join(' ')
+        )
+        if (!tokens.every((t) => haystack.includes(t))) return false
       }
       return true
     })
@@ -127,6 +137,9 @@ export default function BrowsePage() {
             (b.resource_ratings_view?.[0]?.average_rating || 0) -
             (a.resource_ratings_view?.[0]?.average_rating || 0)
         )
+        break
+      case 'views':
+        sorted.sort((a, b) => (b.views || 0) - (a.views || 0))
         break
       case 'title':
         sorted.sort((a, b) =>
@@ -193,7 +206,7 @@ export default function BrowsePage() {
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search by title, subject, department…"
+                  placeholder="Search by title, subject, degree, department…"
                   className="bg-background pl-8"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -201,7 +214,7 @@ export default function BrowsePage() {
               </div>
               <div className="flex items-center gap-2">
                 <select
-                  className={`${selectClass} sm:w-40`}
+                  className={`${selectClass} sm:w-44`}
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortKey)}
                 >
@@ -300,7 +313,7 @@ export default function BrowsePage() {
         </Card>
 
         {loading ? (
-          <TableSkeleton rows={6} cols={7} />
+          <TableSkeleton rows={6} cols={8} />
         ) : resources.length === 0 ? (
           <EmptyState
             icon={FolderOpen}
@@ -316,7 +329,7 @@ export default function BrowsePage() {
           <EmptyState
             icon={FileX2}
             title="No matching resources"
-            description="Try a different keyword or clear your filters."
+            description={`No results for "${search}". Try fewer or different words.`}
             action={
               <Button variant="outline" size="sm" onClick={clearFilters} className="mt-1">
                 Clear filters
@@ -341,6 +354,7 @@ export default function BrowsePage() {
                   <thead className="border-b border-border bg-muted font-medium text-muted-foreground">
                     <tr>
                       <th className="px-4 py-3">Title</th>
+                      <th className="px-4 py-3">Degree</th>
                       <th className="px-4 py-3">Department</th>
                       <th className="px-4 py-3">Subject / Sem</th>
                       <th className="px-4 py-3">Category</th>
@@ -355,8 +369,18 @@ export default function BrowsePage() {
                         key={resource.resource_id}
                         className="transition-colors hover:bg-muted/50"
                       >
-                        <td className="px-4 py-3 font-medium text-foreground">
-                          {resource.title}
+                        <td className="px-4 py-3">
+                          <div
+                            className="line-clamp-2 max-w-[220px] break-all font-medium text-foreground"
+                            title={resource.title}
+                          >
+                            {resource.title}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="whitespace-nowrap rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+                            {resource.degree}
+                          </span>
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">
                           {resource.department}
@@ -368,7 +392,7 @@ export default function BrowsePage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                          <span className="whitespace-nowrap rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
                             {resource.category}
                           </span>
                         </td>

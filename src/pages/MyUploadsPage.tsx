@@ -157,7 +157,6 @@ export default function MyUploadsPage() {
           )}
         </div>
 
-        {/* Status filter pills */}
         <div className="flex flex-wrap items-center gap-2">
           {(
             [
@@ -243,8 +242,11 @@ export default function MyUploadsPage() {
                   key={resource.resource_id}
                   className="flex flex-col justify-between gap-4 p-4 transition-colors hover:bg-muted/50 md:flex-row md:items-center"
                 >
-                  <div className="flex-1 space-y-1">
-                    <h3 className="text-base font-semibold text-foreground">
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <h3
+                      className="line-clamp-2 max-w-[480px] break-all text-base font-semibold text-foreground"
+                      title={resource.title}
+                    >
                       {resource.title}
                     </h3>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -255,9 +257,9 @@ export default function MyUploadsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex shrink-0 items-center gap-3">
                     <span
-                      className={`rounded-full px-2 py-1 text-xs font-medium ${statusBadgeClass(
+                      className={`whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${statusBadgeClass(
                         resource.status
                       )}`}
                     >
