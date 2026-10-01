@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import { Input } from '../components/ui/input'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
@@ -29,6 +30,7 @@ function normalize(s: string): string {
 }
 
 export default function BrowsePage() {
+  const { user } = useAuth()
   const [resources, setResources] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [refetching, setRefetching] = useState(false)
@@ -41,6 +43,8 @@ export default function BrowsePage() {
   const [departmentFilter, setDepartmentFilter] = useState('')
   const [semesterFilter, setSemesterFilter] = useState('')
   const [sort, setSort] = useState<SortKey>('newest')
+
+  const [viewedIds, setViewedIds] = useState<Set<string>>(new Set())
 
   const fetchResources = async (silent = false) => {
     if (!silent) setLoading(true)
@@ -60,6 +64,18 @@ export default function BrowsePage() {
   useEffect(() => {
     fetchResources()
   }, [])
+
+  useEffect(() => {
+    if (!user) return
+    const fetchViewed = async () => {
+      const { data } = await supabase
+        .from('resource_views')
+        .select('resource_id')
+        .eq('user_id', user.id)
+      setViewedIds(new Set((data || []).map((v: any) => v.resource_id)))
+    }
+    fetchViewed()
+  }, [user])
 
   const degreeOptions = useMemo(() => {
     const s = new Set<string>()
@@ -94,9 +110,7 @@ export default function BrowsePage() {
   }, [resources])
 
   const filtered = useMemo(() => {
-    const tokens = normalize(debouncedSearch)
-      .split(/\s+/)
-      .filter(Boolean)
+    const tokens = normalize(debouncedSearch).split(/\s+/).filter(Boolean)
 
     const result = resources.filter((r) => {
       if (categoryFilter && r.category !== categoryFilter) return false
@@ -178,11 +192,20 @@ export default function BrowsePage() {
   }
 
   const handleView = async (resourceId: string) => {
+    if (viewedIds.has(resourceId)) return
+
+    setViewedIds((prev) => {
+      const next = new Set(prev)
+      next.add(resourceId)
+      return next
+    })
+
     setResources((prev) =>
       prev.map((r) =>
         r.resource_id === resourceId ? { ...r, views: (r.views || 0) + 1 } : r
       )
     )
+
     await supabase.rpc('increment_resource_views', {
       resource_id_input: resourceId,
     })

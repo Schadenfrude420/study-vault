@@ -14,10 +14,10 @@ import {
   DialogTitle,
 } from '../components/ui/dialog'
 import { toast } from 'sonner'
-import { Trash2, AlertTriangle, AlertOctagon, Loader2 } from 'lucide-react'
+import { Trash2, AlertTriangle, AlertOctagon, Loader2, Check } from 'lucide-react'
 
 export default function AccountPage() {
-  const { user } = useAuth()
+  const { user, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [role, setRole] = useState('')
@@ -30,6 +30,7 @@ export default function AccountPage() {
   const [pwMessage, setPwMessage] = useState<string | null>(null)
 
   const [warnings, setWarnings] = useState<any[]>([])
+  const [ackLoading, setAckLoading] = useState(false)
 
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [confirmEmail, setConfirmEmail] = useState('')
@@ -59,8 +60,22 @@ export default function AccountPage() {
       .from('warnings')
       .select('warning_id, reason, created_at')
       .eq('user_id', user.id)
+      .eq('acknowledged', false)
       .order('created_at', { ascending: false })
     setWarnings(data || [])
+  }
+
+  const handleAcknowledgeWarnings = async () => {
+    setAckLoading(true)
+    const { error } = await supabase.rpc('acknowledge_warnings')
+    if (error) {
+      toast.error('Failed to dismiss warnings: ' + error.message)
+    } else {
+      toast.success('Warnings dismissed.')
+      setWarnings([])
+      await refreshProfile()
+    }
+    setAckLoading(false)
   }
 
   const handleSaveName = async () => {
@@ -101,7 +116,6 @@ export default function AccountPage() {
     setPasswordLoading(true)
     setPwMessage(null)
 
-    // Step 1: verify current password by attempting a sign-in
     const { error: verifyError } = await supabase.auth.signInWithPassword({
       email: user.email,
       password: currentPassword,
@@ -113,7 +127,6 @@ export default function AccountPage() {
       return
     }
 
-    // Step 2: now safe to update
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
     })
@@ -143,7 +156,6 @@ export default function AccountPage() {
 
     setDeleting(true)
 
-    // Step 1: collect all file paths from the user's resources BEFORE deleting
     const { data: userResources } = await supabase
       .from('resources')
       .select('file')
@@ -157,7 +169,6 @@ export default function AccountPage() {
       })
       .filter(Boolean) as string[]
 
-    // Step 2: remove the physical files (best-effort — don't block on failure)
     if (paths.length > 0) {
       const { error: storageErr } = await supabase.storage
         .from('study-vault-files')
@@ -167,7 +178,6 @@ export default function AccountPage() {
       }
     }
 
-    // Step 3: delete the account (cascades DB rows)
     const { error } = await supabase.rpc('delete_my_account')
 
     if (error) {
@@ -213,6 +223,19 @@ export default function AccountPage() {
                 </div>
               ))}
             </div>
+            <Button
+              onClick={handleAcknowledgeWarnings}
+              disabled={ackLoading}
+              variant="outline"
+              className="gap-2"
+            >
+              {ackLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              {ackLoading ? 'Dismissing…' : 'OK, I understand'}
+            </Button>
           </CardContent>
         </Card>
       )}

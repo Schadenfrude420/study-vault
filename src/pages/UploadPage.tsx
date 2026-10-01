@@ -151,10 +151,12 @@ export default function UploadPage() {
     setLoading(true)
     setError(null)
 
+    let filePath: string | null = null
+
     try {
       const ext = file.name.split('.').pop()?.toLowerCase()
       const fileName = `${crypto.randomUUID()}.${ext}`
-      const filePath = `${user.id}/${fileName}`
+      filePath = `${user.id}/${fileName}`
 
       const { error: uploadError } = await supabase.storage
         .from('study-vault-files')
@@ -183,6 +185,10 @@ export default function UploadPage() {
       toast.success('Uploaded! Your resource is now live.')
       navigate('/my-uploads')
     } catch (err) {
+      // If the file was uploaded but the DB insert failed, clean up the orphan
+      if (filePath) {
+        await supabase.storage.from('study-vault-files').remove([filePath])
+      }
       const message = err instanceof Error ? err.message : 'Something went wrong during upload.'
       setError(message)
       toast.error(message)

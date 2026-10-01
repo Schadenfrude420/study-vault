@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .from('warnings')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
+      .eq('acknowledged', false)
     setWarningCount(count ?? 0)
   }
 
