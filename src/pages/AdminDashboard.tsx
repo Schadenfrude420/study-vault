@@ -8,6 +8,7 @@ import EmptyState from '../components/EmptyState'
 import StatusBadge from '../components/StatusBadge'
 import ConfirmDialog from '../components/ConfirmDialog'
 import AdminUsersPanel from '../components/AdminUsersPanel'
+import Pagination from '../components/Pagination'
 import { toast } from 'sonner'
 import {
   Users,
@@ -49,6 +50,7 @@ const CHART_COLORS = {
 
 const AXIS_STROKE = '#94a3b8'
 const GRID_STROKE = 'rgba(148, 163, 184, 0.12)'
+const PAGE_SIZE = 10
 
 type TimeRange = 'week' | 'month' | 'year'
 
@@ -120,6 +122,9 @@ export default function AdminDashboard() {
   const [timeRange, setTimeRange] = useState<TimeRange>('week')
   const [pendingId, setPendingId] = useState<string | null>(null)
 
+  const [reportPage, setReportPage] = useState(1)
+  const [uploadPage, setUploadPage] = useState(1)
+
   const [confirm, setConfirm] = useState<{
     open: boolean
     title: string
@@ -154,16 +159,24 @@ export default function AdminDashboard() {
         users!reports_user_id_fkey (email)
       `)
       .order('created_at', { ascending: false })
+      .limit(10000)
     setReports(reportsData || [])
 
     const { data: resourcesData } = await supabase
       .from('resources')
       .select('*')
       .order('created_at', { ascending: false })
+      .limit(10000)
     setResources(resourcesData || [])
 
     setLoading(false)
   }
+
+  const totalReportPages = Math.max(1, Math.ceil(reports.length / PAGE_SIZE))
+  const totalUploadPages = Math.max(1, Math.ceil(resources.length / PAGE_SIZE))
+
+  const paginatedReports = reports.slice((reportPage - 1) * PAGE_SIZE, reportPage * PAGE_SIZE)
+  const paginatedResources = resources.slice((uploadPage - 1) * PAGE_SIZE, uploadPage * PAGE_SIZE)
 
   const rangeStart = useMemo(() => {
     const now = new Date()
@@ -378,8 +391,7 @@ export default function AdminDashboard() {
     })
   }
 
-  const totalUsers = stats?.total_users || stats?.users || 0
-  const totalResources = stats?.total_resources || stats?.resources || 0
+  const totalUsers = stats?.total_users ?? stats?.users ?? 0
   const pendingReports = reports.filter((r) => r.status === 'Pending').length
 
   const totalStatusCount = statusData.reduce((sum, d) => sum + d.value, 0)
@@ -443,9 +455,11 @@ export default function AdminDashboard() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Resources</p>
+                      <p className="text-sm text-muted-foreground">
+                        Resources · {TIME_RANGE_LABELS[timeRange]}
+                      </p>
                       <p className="mt-1 text-3xl font-bold text-foreground">
-                        {totalResources}
+                        {resourcesInRange.length}
                       </p>
                     </div>
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
@@ -811,67 +825,181 @@ export default function AdminDashboard() {
                   className="border-0 bg-transparent"
                 />
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-border bg-muted text-muted-foreground">
-                      <tr>
-                        <th className="px-4 py-3 text-left font-medium">Resource</th>
-                        <th className="px-4 py-3 text-left font-medium">Reason</th>
-                        <th className="px-4 py-3 text-left font-medium">Reported By</th>
-                        <th className="px-4 py-3 text-left font-medium">Status</th>
-                        <th className="px-4 py-3 text-right font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {reports.map((r) => {
-                        const isPending =
-                          pendingId === `report-${r.report_id}` ||
-                          pendingId === r.resources?.resource_id
-                        return (
-                          <tr key={r.report_id} className="transition-colors hover:bg-muted/50">
-                            <td className="px-4 py-3">
-                              <div
-                                className="line-clamp-2 max-w-[200px] break-all font-medium text-foreground"
-                                title={r.resources?.title || 'Deleted Resource'}
-                              >
-                                {r.resources?.title || 'Deleted Resource'}
-                              </div>
-                              {r.resources?.status === 'Rejected' && (
-                                <span className="text-xs text-destructive">Hidden</span>
-                              )}
-                            </td>
-                            <td className="max-w-xs px-4 py-3 text-muted-foreground">
-                              <span className="line-clamp-2">{r.reason}</span>
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground">
-                              {r.users?.email || 'Unknown'}
-                            </td>
-                            <td className="px-4 py-3">
-                              <StatusBadge status={r.status} />
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex justify-end gap-2">
-                                {r.status !== 'Resolved' && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleDismiss(r.report_id)}
-                                    disabled={busy}
-                                    className="h-8"
-                                  >
-                                    {pendingId === `report-${r.report_id}` ? (
-                                      <Loader2 size={14} className="animate-spin" />
-                                    ) : (
-                                      'Dismiss'
-                                    )}
-                                  </Button>
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="border-b border-border bg-muted text-muted-foreground">
+                        <tr>
+                          <th className="px-4 py-3 text-left font-medium">Resource</th>
+                          <th className="px-4 py-3 text-left font-medium">Reason</th>
+                          <th className="px-4 py-3 text-left font-medium">Reported By</th>
+                          <th className="px-4 py-3 text-left font-medium">Status</th>
+                          <th className="px-4 py-3 text-right font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {paginatedReports.map((r) => {
+                          const isPending =
+                            pendingId === `report-${r.report_id}` ||
+                            pendingId === r.resources?.resource_id
+                          return (
+                            <tr key={r.report_id} className="transition-colors hover:bg-muted/50">
+                              <td className="px-4 py-3">
+                                <div
+                                  className="line-clamp-2 max-w-[200px] break-all font-medium text-foreground"
+                                  title={r.resources?.title || 'Deleted Resource'}
+                                >
+                                  {r.resources?.title || 'Deleted Resource'}
+                                </div>
+                                {r.resources?.status === 'Rejected' && (
+                                  <span className="text-xs text-destructive">Hidden</span>
                                 )}
-                                {r.resources &&
-                                  (r.resources.status === 'Rejected' ? (
+                              </td>
+                              <td className="max-w-xs px-4 py-3 text-muted-foreground">
+                                <span className="line-clamp-2">{r.reason}</span>
+                              </td>
+                              <td className="px-4 py-3 text-muted-foreground">
+                                {r.users?.email || 'Unknown'}
+                              </td>
+                              <td className="px-4 py-3">
+                                <StatusBadge status={r.status} />
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex justify-end gap-2">
+                                  {r.status !== 'Resolved' && (
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() => handleRestore(r.resources?.resource_id)}
+                                      onClick={() => handleDismiss(r.report_id)}
+                                      disabled={busy}
+                                      className="h-8"
+                                    >
+                                      {pendingId === `report-${r.report_id}` ? (
+                                        <Loader2 size={14} className="animate-spin" />
+                                      ) : (
+                                        'Dismiss'
+                                      )}
+                                    </Button>
+                                  )}
+                                  {r.resources &&
+                                    (r.resources.status === 'Rejected' ? (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleRestore(r.resources?.resource_id)}
+                                        disabled={busy}
+                                        className="h-8 gap-1"
+                                      >
+                                        {isPending ? (
+                                          <>
+                                            <Loader2 size={14} className="animate-spin" /> Working…
+                                          </>
+                                        ) : (
+                                          <>
+                                            <RotateCcw size={14} /> Restore
+                                          </>
+                                        )}
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() =>
+                                          handleHideFromReport(
+                                            r.report_id,
+                                            r.resources?.resource_id
+                                          )
+                                        }
+                                        disabled={busy}
+                                        className="h-8 gap-1"
+                                      >
+                                        {isPending ? (
+                                          <>
+                                            <Loader2 size={14} className="animate-spin" /> Hiding…
+                                          </>
+                                        ) : (
+                                          <>
+                                            <X size={14} /> Hide
+                                          </>
+                                        )}
+                                      </Button>
+                                    ))}
+                                  {r.resources?.file && (
+                                    <Button size="sm" variant="ghost" asChild className="h-8 gap-1">
+                                      <a
+                                        href={r.resources.file}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <Eye size={14} /> View
+                                      </a>
+                                    </Button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="border-t border-border p-4">
+                    <Pagination page={reportPage} totalPages={totalReportPages} onChange={setReportPage} />
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              {loading ? (
+                <TableSkeleton rows={5} cols={5} className="rounded-none border-0 shadow-none" />
+              ) : resources.length === 0 ? (
+                <EmptyState
+                  icon={FileText}
+                  title="No resources uploaded yet"
+                  description="All uploaded resources will appear here."
+                  className="border-0 bg-transparent"
+                />
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="border-b border-border bg-muted text-muted-foreground">
+                        <tr>
+                          <th className="px-4 py-3 text-left font-medium">Title</th>
+                          <th className="px-4 py-3 text-left font-medium">Department</th>
+                          <th className="px-4 py-3 text-left font-medium">Subject</th>
+                          <th className="px-4 py-3 text-left font-medium">Status</th>
+                          <th className="px-4 py-3 text-right font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {paginatedResources.map((res) => {
+                          const isPending = pendingId === res.resource_id
+                          return (
+                            <tr key={res.resource_id} className="transition-colors hover:bg-muted/50">
+                              <td className="px-4 py-3">
+                                <div
+                                  className="line-clamp-2 max-w-[200px] break-all font-medium text-foreground"
+                                  title={res.title}
+                                >
+                                  {res.title}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-muted-foreground">{res.department}</td>
+                              <td className="px-4 py-3 text-muted-foreground">{res.subject}</td>
+                              <td className="px-4 py-3">
+                                <StatusBadge status={res.status} />
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex justify-end gap-2">
+                                  {res.status === 'Rejected' ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleRestore(res.resource_id)}
                                       disabled={busy}
                                       className="h-8 gap-1"
                                     >
@@ -889,12 +1017,7 @@ export default function AdminDashboard() {
                                     <Button
                                       size="sm"
                                       variant="destructive"
-                                      onClick={() =>
-                                        handleHideFromReport(
-                                          r.report_id,
-                                          r.resources?.resource_id
-                                        )
-                                      }
+                                      onClick={() => handleRejectUpload(res.resource_id)}
                                       disabled={busy}
                                       className="h-8 gap-1"
                                     >
@@ -908,127 +1031,28 @@ export default function AdminDashboard() {
                                         </>
                                       )}
                                     </Button>
-                                  ))}
-                                {r.resources?.file && (
+                                  )}
                                   <Button size="sm" variant="ghost" asChild className="h-8 gap-1">
                                     <a
-                                      href={r.resources.file}
+                                      href={res.file}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                     >
                                       <Eye size={14} /> View
                                     </a>
                                   </Button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              {loading ? (
-                <TableSkeleton rows={5} cols={5} className="rounded-none border-0 shadow-none" />
-              ) : resources.length === 0 ? (
-                <EmptyState
-                  icon={FileText}
-                  title="No resources uploaded yet"
-                  description="All uploaded resources will appear here."
-                  className="border-0 bg-transparent"
-                />
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-border bg-muted text-muted-foreground">
-                      <tr>
-                        <th className="px-4 py-3 text-left font-medium">Title</th>
-                        <th className="px-4 py-3 text-left font-medium">Department</th>
-                        <th className="px-4 py-3 text-left font-medium">Subject</th>
-                        <th className="px-4 py-3 text-left font-medium">Status</th>
-                        <th className="px-4 py-3 text-right font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {resources.map((res) => {
-                        const isPending = pendingId === res.resource_id
-                        return (
-                          <tr key={res.resource_id} className="transition-colors hover:bg-muted/50">
-                            <td className="px-4 py-3">
-                              <div
-                                className="line-clamp-2 max-w-[200px] break-all font-medium text-foreground"
-                                title={res.title}
-                              >
-                                {res.title}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground">{res.department}</td>
-                            <td className="px-4 py-3 text-muted-foreground">{res.subject}</td>
-                            <td className="px-4 py-3">
-                              <StatusBadge status={res.status} />
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex justify-end gap-2">
-                                {res.status === 'Rejected' ? (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleRestore(res.resource_id)}
-                                    disabled={busy}
-                                    className="h-8 gap-1"
-                                  >
-                                    {isPending ? (
-                                      <>
-                                        <Loader2 size={14} className="animate-spin" /> Working…
-                                      </>
-                                    ) : (
-                                      <>
-                                        <RotateCcw size={14} /> Restore
-                                      </>
-                                    )}
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => handleRejectUpload(res.resource_id)}
-                                    disabled={busy}
-                                    className="h-8 gap-1"
-                                  >
-                                    {isPending ? (
-                                      <>
-                                        <Loader2 size={14} className="animate-spin" /> Hiding…
-                                      </>
-                                    ) : (
-                                      <>
-                                        <X size={14} /> Hide
-                                      </>
-                                    )}
-                                  </Button>
-                                )}
-                                <Button size="sm" variant="ghost" asChild className="h-8 gap-1">
-                                  <a
-                                    href={res.file}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Eye size={14} /> View
-                                  </a>
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="border-t border-border p-4">
+                    <Pagination page={uploadPage} totalPages={totalUploadPages} onChange={setUploadPage} />
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
