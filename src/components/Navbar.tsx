@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { User, Menu, X } from 'lucide-react'
 import Logo from './Logo'
+import AccountSwitcher from './AccountSwitcher'
 
 export default function Navbar() {
   const { user, role, warningCount } = useAuth()
@@ -32,16 +33,18 @@ export default function Navbar() {
           <Logo className="text-primary" size={20} />
           <span>Study Vault</span>
         </Link>
-        <button
-          onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
-          className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <AccountSwitcher compact />
+          <button
+            onClick={() => setOpen(!open)}
+            aria-label="Toggle menu"
+            className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
 
-      {/* Mobile backdrop */}
       {open && (
         <div
           className="fixed inset-0 z-40 bg-black/60 md:hidden"
@@ -49,7 +52,6 @@ export default function Navbar() {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 transform flex-col justify-between border-r bg-card p-4 transition-transform duration-200 md:static md:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
@@ -64,6 +66,11 @@ export default function Navbar() {
             <Logo className="text-primary" size={22} />
             <span>Study Vault</span>
           </Link>
+
+          {/* Account Switcher — desktop only (mobile has its own compact one) */}
+          <div className="hidden md:block">
+            <AccountSwitcher />
+          </div>
 
           <nav className="flex flex-col gap-1 pt-14 md:pt-0">
             <Link to="/browse" onClick={close} className={linkClass('/browse')}>
