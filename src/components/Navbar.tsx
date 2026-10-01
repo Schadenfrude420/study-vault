@@ -1,7 +1,16 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { User, Menu, X } from 'lucide-react'
+import {
+  User,
+  Menu,
+  X,
+  Compass,
+  Upload,
+  FolderOpen,
+  Bookmark,
+  LayoutDashboard,
+} from 'lucide-react'
 import Logo from './Logo'
 import AccountSwitcher from './AccountSwitcher'
 import SidebarStats from './SidebarStats'
@@ -14,9 +23,9 @@ export default function Navbar() {
   if (!user) return null
 
   const linkClass = (path: string) =>
-    `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
+    `flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
       location.pathname === path
-        ? 'nav-active font-medium'
+        ? 'nav-active'
         : 'text-muted-foreground hover:bg-accent hover:text-foreground'
     }`
 
@@ -24,6 +33,7 @@ export default function Navbar() {
 
   return (
     <>
+      {/* Mobile top bar */}
       <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b bg-card p-4 md:hidden">
         <Link
           to="/browse"
@@ -57,6 +67,7 @@ export default function Navbar() {
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
+        {/* Logo */}
         <Link
           to="/browse"
           onClick={close}
@@ -66,43 +77,57 @@ export default function Navbar() {
           <span>Study Vault</span>
         </Link>
 
+        {/* Profile card */}
         <div className="mt-6 hidden md:block">
           <AccountSwitcher />
         </div>
 
-        <nav className="mt-6 flex flex-col gap-1 pt-14 md:pt-0">
-          <p className="hidden px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground md:block">
+        {/* Main nav */}
+        <nav className="mt-6 flex flex-col gap-0.5 pt-14 md:pt-0">
+          <p className="hidden px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground md:block">
             Main
           </p>
           <Link to="/browse" onClick={close} className={linkClass('/browse')}>
-            Browse
+            <Compass size={16} />
+            <span>Browse</span>
           </Link>
           <Link to="/upload" onClick={close} className={linkClass('/upload')}>
-            Upload
+            <Upload size={16} />
+            <span>Upload</span>
           </Link>
-          <Link to="/my-uploads" onClick={close} className={linkClass('/my-uploads')}>
-            My Uploads
+          <Link
+            to="/my-uploads"
+            onClick={close}
+            className={linkClass('/my-uploads')}
+          >
+            <FolderOpen size={16} />
+            <span>My Uploads</span>
           </Link>
           <Link to="/saved" onClick={close} className={linkClass('/saved')}>
-            Saved
+            <Bookmark size={16} />
+            <span>Saved</span>
           </Link>
         </nav>
 
+        {/* Stats card */}
         <div className="mt-6 hidden md:block">
           <SidebarStats />
         </div>
 
+        {/* Admin nav */}
         {role === 'admin' && (
-          <nav className="mt-6 flex flex-col gap-1">
-            <p className="hidden px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground md:block">
+          <nav className="mt-6 flex flex-col gap-0.5">
+            <p className="hidden px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground md:block">
               Admin
             </p>
             <Link to="/admin" onClick={close} className={linkClass('/admin')}>
-              Admin Dashboard
+              <LayoutDashboard size={16} />
+              <span>Admin Dashboard</span>
             </Link>
           </nav>
         )}
 
+        {/* Account link pinned to bottom */}
         <div className="mt-auto pt-4">
           <Link to="/account" onClick={close} className={linkClass('/account')}>
             <User size={16} />

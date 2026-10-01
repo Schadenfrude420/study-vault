@@ -310,11 +310,60 @@
 
 .dark .placeholder\:text-gray-400::placeholder { color: var(--muted-foreground); }
 
-/* Hide scrollbars while keeping scroll functionality */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+/* ============================================================
+   THEMED SCROLLBAR — very transparent, electric blue
+   ============================================================ */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.15) transparent;
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+*:hover {
+  scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background 200ms ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.35);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(59, 130, 246, 0.55);
+  background-clip: content-box;
+}
+
+/* Corner piece (where vertical + horizontal meet) */
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Make the thumb even more subtle inside the sidebar */
+aside::-webkit-scrollbar {
+  width: 6px;
+}
+aside::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid transparent;
+}
+aside::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.28);
 }
