@@ -10,6 +10,7 @@ import AuthConfirmPage from './pages/AuthConfirmPage'
 import BrowsePage from './pages/BrowsePage'
 import UploadPage from './pages/UploadPage'
 import MyUploadsPage from './pages/MyUploadsPage'
+import SavedPage from './pages/SavedPage'
 import AdminDashboard from './pages/AdminDashboard'
 import AccountPage from './pages/AccountPage'
 
@@ -36,7 +37,7 @@ function ProtectedLayout() {
   return (
     <div className="flex h-screen pt-16 md:pt-0">
       <Navbar />
-      <main className="flex-1 overflow-y-auto no-scrollbar">
+      <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
     </div>
@@ -59,6 +60,7 @@ function App() {
             <Route path="/browse" element={<BrowsePage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/my-uploads" element={<MyUploadsPage />} />
+            <Route path="/saved" element={<SavedPage />} />
             <Route path="/account" element={<AccountPage />} />
 
             <Route element={<AdminRoute />}>

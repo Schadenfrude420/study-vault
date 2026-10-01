@@ -24,7 +24,6 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Mobile top bar */}
       <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b bg-card p-4 md:hidden">
         <Link
           to="/browse"
@@ -58,7 +57,6 @@ export default function Navbar() {
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Logo */}
         <Link
           to="/browse"
           onClick={close}
@@ -68,12 +66,10 @@ export default function Navbar() {
           <span>Study Vault</span>
         </Link>
 
-        {/* Profile card */}
         <div className="mt-6 hidden md:block">
           <AccountSwitcher />
         </div>
 
-        {/* Main nav */}
         <nav className="mt-6 flex flex-col gap-1 pt-14 md:pt-0">
           <p className="hidden px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground md:block">
             Main
@@ -87,14 +83,15 @@ export default function Navbar() {
           <Link to="/my-uploads" onClick={close} className={linkClass('/my-uploads')}>
             My Uploads
           </Link>
+          <Link to="/saved" onClick={close} className={linkClass('/saved')}>
+            Saved
+          </Link>
         </nav>
 
-        {/* Stats card — visible for all users, admin or not */}
         <div className="mt-6 hidden md:block">
           <SidebarStats />
         </div>
 
-        {/* Admin nav (only for admins) */}
         {role === 'admin' && (
           <nav className="mt-6 flex flex-col gap-1">
             <p className="hidden px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground md:block">
@@ -106,7 +103,6 @@ export default function Navbar() {
           </nav>
         )}
 
-        {/* Push Account link to the bottom */}
         <div className="mt-auto pt-4">
           <Link to="/account" onClick={close} className={linkClass('/account')}>
             <User size={16} />

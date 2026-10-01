@@ -7,6 +7,7 @@ import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 import StarRating from '../components/StarRating'
 import ReportButton from '../components/ReportButton'
+import BookmarkButton from '../components/BookmarkButton'
 import TableSkeleton from '../components/TableSkeleton'
 import EmptyState from '../components/EmptyState'
 import Pagination from '../components/Pagination'
@@ -17,6 +18,10 @@ const PAGE_SIZE = 10
 
 const selectClass =
   'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
+
+// Select style for the sort dropdown (no native arrow)
+const sortSelectClass =
+  'h-9 w-full appearance-none rounded-md border border-input bg-background pl-3 pr-8 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer'
 
 type SortKey = 'newest' | 'oldest' | 'rating' | 'views' | 'title'
 
@@ -91,6 +96,7 @@ export default function BrowsePage() {
   const [showFilters, setShowFilters] = useState(false)
 
   const [viewedIds, setViewedIds] = useState<Set<string>>(new Set())
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const topRef = useRef<HTMLDivElement>(null)
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
@@ -178,6 +184,7 @@ export default function BrowsePage() {
 
   useEffect(() => {
     if (!user) return
+
     const fetchViewed = async () => {
       const { data } = await supabase
         .from('resource_views')
@@ -186,6 +193,15 @@ export default function BrowsePage() {
       setViewedIds(new Set((data || []).map((v: any) => v.resource_id)))
     }
     fetchViewed()
+
+    const fetchSaved = async () => {
+      const { data } = await supabase
+        .from('bookmarks')
+        .select('resource_id')
+        .eq('user_id', user.id)
+      setSavedIds(new Set((data || []).map((b: any) => b.resource_id)))
+    }
+    fetchSaved()
   }, [user])
 
   const [degreeOptions, setDegreeOptions] = useState<string[]>([])
@@ -259,12 +275,21 @@ export default function BrowsePage() {
     })
   }
 
+  const handleBookmarkToggle = (resourceId: string, saved: boolean) => {
+    setSavedIds((prev) => {
+      const next = new Set(prev)
+      if (saved) next.add(resourceId)
+      else next.delete(resourceId)
+      return next
+    })
+  }
+
   const rangeStart = totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
   const rangeEnd = Math.min(page * PAGE_SIZE, totalCount)
 
   return (
     <div className="p-4 md:p-10" ref={topRef}>
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6">
         <header className="space-y-1">
           <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
             Browse Resources
@@ -276,7 +301,6 @@ export default function BrowsePage() {
 
         <Card className="card-glow">
           <CardContent className="space-y-4 p-4 md:p-6">
-            {/* Search Row */}
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -287,7 +311,6 @@ export default function BrowsePage() {
               />
             </div>
 
-            {/* Filters toggle + Sort (mobile stacks) */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Button
                 variant={showFilters ? 'default' : 'outline'}
@@ -315,23 +338,29 @@ export default function BrowsePage() {
                 />
               </Button>
 
-              <select
-                className={`${selectClass} sm:w-44`}
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SortKey)}
-              >
-                {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
-                  <option key={k} value={k}>
-                    {SORT_LABELS[k]}
-                  </option>
-                ))}
-              </select>
+              {/* 👇 Sort dropdown — custom chevron hugs the text */}
+              <div className="relative sm:w-auto sm:inline-block">
+                <select
+                  className={sortSelectClass}
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortKey)}
+                >
+                  {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
+                    <option key={k} value={k}>
+                      {SORT_LABELS[k]}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+              </div>
             </div>
 
-            {/* Collapsible Filter Panel */}
             {showFilters && (
               <div className="space-y-4 border-t border-border pt-4">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <label htmlFor="f-category" className="mb-1.5 block text-xs font-medium text-muted-foreground">
                       Category
@@ -422,7 +451,7 @@ export default function BrowsePage() {
         </Card>
 
         {loading ? (
-          <TableSkeleton rows={PAGE_SIZE} cols={9} />
+          <TableSkeleton rows={PAGE_SIZE} cols={5} />
         ) : totalCount === 0 && !hasActiveFilters ? (
           <EmptyState
             icon={FolderOpen}
@@ -457,8 +486,8 @@ export default function BrowsePage() {
               )}
             </div>
 
-            {/* ============ MOBILE CARD LAYOUT ============ */}
-            <div className="space-y-3 md:hidden">
+            {/* MOBILE / TABLET CARDS */}
+            <div className="space-y-3 xl:hidden">
               {resources.map((resource) => {
                 const fileType = getFileType(resource.file)
                 return (
@@ -466,21 +495,28 @@ export default function BrowsePage() {
                     key={resource.resource_id}
                     className="rounded-lg border border-border bg-card p-4 shadow-sm"
                   >
-                    {/* Title + type badge */}
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="min-w-0 flex-1 break-all text-sm font-semibold leading-snug text-foreground">
                         {resource.title}
                       </h3>
-                      <span
-                        className={`inline-block shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${fileTypeColor(
-                          fileType
-                        )}`}
-                      >
-                        {fileType}
-                      </span>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <span
+                          className={`inline-block rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${fileTypeColor(
+                            fileType
+                          )}`}
+                        >
+                          {fileType}
+                        </span>
+                        <BookmarkButton
+                          resourceId={resource.resource_id}
+                          initialSaved={savedIds.has(resource.resource_id)}
+                          onToggle={(saved) =>
+                            handleBookmarkToggle(resource.resource_id, saved)
+                          }
+                        />
+                      </div>
                     </div>
 
-                    {/* Badges row */}
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground">
                         {resource.degree}
@@ -493,12 +529,10 @@ export default function BrowsePage() {
                       </span>
                     </div>
 
-                    {/* Subject + semester */}
                     <p className="mt-2 text-xs text-muted-foreground">
                       {resource.subject} <span className="opacity-60">• Sem {resource.semester}</span>
                     </p>
 
-                    {/* Bottom: rating + views + actions */}
                     <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3">
                       <div className="flex items-center justify-between gap-3">
                         <StarRating
@@ -541,21 +575,24 @@ export default function BrowsePage() {
               })}
             </div>
 
-            {/* ============ DESKTOP TABLE LAYOUT ============ */}
-            <div className="hidden md:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+            {/* DESKTOP TABLE */}
+            <div className="hidden xl:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
+                <table className="w-full table-fixed text-left text-sm">
+                  <colgroup>
+                    <col className="w-[44px]" />
+                    <col />
+                    <col className="w-[110px]" />
+                    <col className="w-[180px]" />
+                    <col className="w-[200px]" />
+                  </colgroup>
                   <thead className="border-b border-border bg-muted font-medium text-muted-foreground">
                     <tr>
-                      <th className="whitespace-nowrap px-4 py-3 text-left">Title</th>
-                      <th className="whitespace-nowrap px-4 py-3 text-center">Type</th>
-                      <th className="whitespace-nowrap px-4 py-3 text-left">Degree</th>
-                      <th className="whitespace-nowrap px-4 py-3 text-left">Department</th>
-                      <th className="whitespace-nowrap px-4 py-3 text-left">Subject / Sem</th>
-                      <th className="whitespace-nowrap px-4 py-3 text-left">Category</th>
-                      <th className="whitespace-nowrap px-4 py-3 text-right">Rating</th>
-                      <th className="whitespace-nowrap px-4 py-3 text-right">Views</th>
-                      <th className="whitespace-nowrap px-4 py-3 text-right">Actions</th>
+                      <th className="px-2 py-3"></th>
+                      <th className="px-4 py-3 text-left">Title</th>
+                      <th className="px-4 py-3 text-left">Category</th>
+                      <th className="px-4 py-3 text-left">Rating</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -566,44 +603,49 @@ export default function BrowsePage() {
                           key={resource.resource_id}
                           className="transition-colors hover:bg-muted/50"
                         >
-                          <td className="px-4 py-3">
-                            <div
-                              className="line-clamp-2 max-w-[220px] break-all font-medium text-foreground"
-                              title={resource.title}
-                            >
-                              {resource.title}
+                          <td className="px-2 py-3 align-middle">
+                            <BookmarkButton
+                              resourceId={resource.resource_id}
+                              initialSaved={savedIds.has(resource.resource_id)}
+                              onToggle={(saved) =>
+                                handleBookmarkToggle(resource.resource_id, saved)
+                              }
+                              size={15}
+                            />
+                          </td>
+
+                          <td className="min-w-0 px-4 py-3 align-middle">
+                            <div className="flex items-start gap-2">
+                              <span
+                                className={`mt-0.5 inline-block shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${fileTypeColor(
+                                  fileType
+                                )}`}
+                              >
+                                {fileType}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <div
+                                  className="line-clamp-1 font-medium text-foreground"
+                                  title={resource.title}
+                                >
+                                  {resource.title}
+                                </div>
+                                <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                                  {resource.degree} · {resource.department} ·{' '}
+                                  {resource.subject} · Sem {resource.semester}
+                                </div>
+                              </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center">
-                            <span
-                              className={`inline-block rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${fileTypeColor(
-                                fileType
-                              )}`}
-                            >
-                              {fileType}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="whitespace-nowrap rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
-                              {resource.degree}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground">
-                            {resource.department}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                            {resource.subject}{' '}
-                            <span className="text-muted-foreground/70">
-                              • Sem {resource.semester}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="whitespace-nowrap rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+
+                          <td className="px-4 py-3 align-middle">
+                            <span className="inline-block max-w-full truncate rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
                               {resource.category}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
-                            <div className="flex justify-end">
+
+                          <td className="px-4 py-3 align-middle">
+                            <div className="flex flex-col gap-1">
                               <StarRating
                                 resourceId={resource.resource_id}
                                 averageRating={
@@ -614,15 +656,14 @@ export default function BrowsePage() {
                                 }
                                 onRatingChange={() => fetchResources(true)}
                               />
+                              <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                                <Eye size={11} />
+                                <span>{resource.views ?? 0} views</span>
+                              </div>
                             </div>
                           </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-right text-muted-foreground">
-                            <div className="inline-flex items-center gap-1">
-                              <Eye size={14} />
-                              <span>{resource.views ?? 0}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
+
+                          <td className="px-4 py-3 align-middle">
                             <div className="flex items-center justify-end gap-2">
                               <Button
                                 size="sm"
