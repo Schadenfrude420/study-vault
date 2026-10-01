@@ -95,7 +95,6 @@ export default function BrowsePage() {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
-  // Count of active dropdown filters (excludes search)
   const activeFilterCount = [
     categoryFilter,
     degreeFilter,
@@ -264,7 +263,7 @@ export default function BrowsePage() {
   const rangeEnd = Math.min(page * PAGE_SIZE, totalCount)
 
   return (
-    <div className="p-6 md:p-10" ref={topRef}>
+    <div className="p-4 md:p-10" ref={topRef}>
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="space-y-1">
           <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
@@ -277,58 +276,56 @@ export default function BrowsePage() {
 
         <Card className="card-glow">
           <CardContent className="space-y-4 p-4 md:p-6">
-            {/* Search + Sort + Filters Toggle */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search by title, subject, degree, department…"
-                  className="bg-background pl-8"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
+            {/* Search Row */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by title, subject, degree…"
+                className="bg-background pl-8"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
 
-              <div className="flex items-center gap-2">
-                {/* Filters Toggle Button */}
-                <Button
-                  variant={showFilters ? 'default' : 'outline'}
-                  size="default"
-                  onClick={() => setShowFilters((s) => !s)}
-                  className="gap-2"
-                >
-                  <Filter className="h-4 w-4" />
-                  <span>Filters</span>
-                  {activeFilterCount > 0 && (
-                    <span
-                      className={`rounded-full px-1.5 py-0.5 text-xs font-bold ${
-                        showFilters
-                          ? 'bg-primary-foreground/20 text-primary-foreground'
-                          : 'bg-primary text-primary-foreground'
-                      }`}
-                    >
-                      {activeFilterCount}
-                    </span>
-                  )}
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${
-                      showFilters ? 'rotate-180' : ''
+            {/* Filters toggle + Sort (mobile stacks) */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Button
+                variant={showFilters ? 'default' : 'outline'}
+                size="default"
+                onClick={() => setShowFilters((s) => !s)}
+                className="gap-2 sm:w-auto"
+              >
+                <Filter className="h-4 w-4" />
+                <span>Filters</span>
+                {activeFilterCount > 0 && (
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-xs font-bold ${
+                      showFilters
+                        ? 'bg-primary-foreground/20 text-primary-foreground'
+                        : 'bg-primary text-primary-foreground'
                     }`}
-                  />
-                </Button>
+                  >
+                    {activeFilterCount}
+                  </span>
+                )}
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform duration-200 ${
+                    showFilters ? 'rotate-180' : ''
+                  }`}
+                />
+              </Button>
 
-                <select
-                  className={`${selectClass} sm:w-44`}
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as SortKey)}
-                >
-                  {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
-                    <option key={k} value={k}>
-                      {SORT_LABELS[k]}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <select
+                className={`${selectClass} sm:w-44`}
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortKey)}
+              >
+                {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
+                  <option key={k} value={k}>
+                    {SORT_LABELS[k]}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Collapsible Filter Panel */}
@@ -460,7 +457,92 @@ export default function BrowsePage() {
               )}
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+            {/* ============ MOBILE CARD LAYOUT ============ */}
+            <div className="space-y-3 md:hidden">
+              {resources.map((resource) => {
+                const fileType = getFileType(resource.file)
+                return (
+                  <div
+                    key={resource.resource_id}
+                    className="rounded-lg border border-border bg-card p-4 shadow-sm"
+                  >
+                    {/* Title + type badge */}
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="min-w-0 flex-1 break-all text-sm font-semibold leading-snug text-foreground">
+                        {resource.title}
+                      </h3>
+                      <span
+                        className={`inline-block shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${fileTypeColor(
+                          fileType
+                        )}`}
+                      >
+                        {fileType}
+                      </span>
+                    </div>
+
+                    {/* Badges row */}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground">
+                        {resource.degree}
+                      </span>
+                      <span className="rounded-md bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground">
+                        {resource.department}
+                      </span>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                        {resource.category}
+                      </span>
+                    </div>
+
+                    {/* Subject + semester */}
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {resource.subject} <span className="opacity-60">• Sem {resource.semester}</span>
+                    </p>
+
+                    {/* Bottom: rating + views + actions */}
+                    <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <StarRating
+                          resourceId={resource.resource_id}
+                          averageRating={
+                            resource.resource_ratings_view?.[0]?.average_rating || 0
+                          }
+                          totalRatings={
+                            resource.resource_ratings_view?.[0]?.total_ratings || 0
+                          }
+                          onRatingChange={() => fetchResources(true)}
+                        />
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Eye size={12} />
+                          <span>{resource.views ?? 0}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          asChild
+                          variant="outline"
+                          className="h-8 flex-1 gap-1"
+                        >
+                          <a
+                            href={inlineUrl(resource.file)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => handleView(resource.resource_id)}
+                          >
+                            <Download size={14} /> View
+                          </a>
+                        </Button>
+                        <ReportButton resourceId={resource.resource_id} />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* ============ DESKTOP TABLE LAYOUT ============ */}
+            <div className="hidden md:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead className="border-b border-border bg-muted font-medium text-muted-foreground">
