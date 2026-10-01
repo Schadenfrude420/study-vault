@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { User, Menu, X } from 'lucide-react'
 import Logo from './Logo'
 import AccountSwitcher from './AccountSwitcher'
+import SidebarStats from './SidebarStats'
 
 export default function Navbar() {
   const { user, role, warningCount } = useAuth()
@@ -13,7 +14,7 @@ export default function Navbar() {
   if (!user) return null
 
   const linkClass = (path: string) =>
-    `flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-colors ${
+    `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
       location.pathname === path
         ? 'nav-active font-medium'
         : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -53,44 +54,60 @@ export default function Navbar() {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 transform flex-col justify-between border-r bg-card p-4 transition-transform duration-200 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 transform flex-col border-r bg-card p-4 transition-transform duration-200 md:static md:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="space-y-6">
-          <Link
-            to="/browse"
-            onClick={close}
-            className="hidden items-center gap-2 px-4 font-display text-xl font-bold tracking-tight text-foreground md:flex"
-          >
-            <Logo className="text-primary" size={22} />
-            <span>Study Vault</span>
-          </Link>
+        {/* Logo */}
+        <Link
+          to="/browse"
+          onClick={close}
+          className="hidden items-center gap-2 px-1 font-display text-xl font-bold tracking-tight text-foreground md:flex"
+        >
+          <Logo className="text-primary" size={22} />
+          <span>Study Vault</span>
+        </Link>
 
-          {/* Account Switcher — desktop only (mobile has its own compact one) */}
-          <div className="hidden md:block">
-            <AccountSwitcher />
-          </div>
-
-          <nav className="flex flex-col gap-1 pt-14 md:pt-0">
-            <Link to="/browse" onClick={close} className={linkClass('/browse')}>
-              Browse
-            </Link>
-            <Link to="/upload" onClick={close} className={linkClass('/upload')}>
-              Upload
-            </Link>
-            <Link to="/my-uploads" onClick={close} className={linkClass('/my-uploads')}>
-              My Uploads
-            </Link>
-            {role === 'admin' && (
-              <Link to="/admin" onClick={close} className={linkClass('/admin')}>
-                Admin Dashboard
-              </Link>
-            )}
-          </nav>
+        {/* Profile card */}
+        <div className="mt-6 hidden md:block">
+          <AccountSwitcher />
         </div>
 
-        <div>
+        {/* Main nav */}
+        <nav className="mt-6 flex flex-col gap-1 pt-14 md:pt-0">
+          <p className="hidden px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground md:block">
+            Main
+          </p>
+          <Link to="/browse" onClick={close} className={linkClass('/browse')}>
+            Browse
+          </Link>
+          <Link to="/upload" onClick={close} className={linkClass('/upload')}>
+            Upload
+          </Link>
+          <Link to="/my-uploads" onClick={close} className={linkClass('/my-uploads')}>
+            My Uploads
+          </Link>
+        </nav>
+
+        {/* Stats card — visible for all users, admin or not */}
+        <div className="mt-6 hidden md:block">
+          <SidebarStats />
+        </div>
+
+        {/* Admin nav (only for admins) */}
+        {role === 'admin' && (
+          <nav className="mt-6 flex flex-col gap-1">
+            <p className="hidden px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground md:block">
+              Admin
+            </p>
+            <Link to="/admin" onClick={close} className={linkClass('/admin')}>
+              Admin Dashboard
+            </Link>
+          </nav>
+        )}
+
+        {/* Push Account link to the bottom */}
+        <div className="mt-auto pt-4">
           <Link to="/account" onClick={close} className={linkClass('/account')}>
             <User size={16} />
             <span>Account</span>

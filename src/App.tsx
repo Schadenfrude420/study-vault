@@ -36,7 +36,7 @@ function ProtectedLayout() {
   return (
     <div className="flex h-screen pt-16 md:pt-0">
       <Navbar />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto no-scrollbar">
         <Outlet />
       </main>
     </div>

@@ -309,3 +309,12 @@
 .dark .hover\:bg-gray-200:hover { background-color: var(--accent); }
 
 .dark .placeholder\:text-gray-400::placeholder { color: var(--muted-foreground); }
+
+/* Hide scrollbars while keeping scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
